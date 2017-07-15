@@ -1,0 +1,182 @@
+﻿
+@{
+    MPMS.Models.Users user = Session["UserInfo"] as MPMS.Models.Users;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //用户体验优化 鼠标手型效果
+            $(".ul-menu li").hover(
+             function () {
+                 $(this).css("cursor", "pointer");
+             });
+            //菜单导航栏 点击事件
+            $(".ul-menu li a").click(function () {
+                //声明变量存储各项属性
+                var text = $(this).text();//文本（即标题）
+                var url = $(this).attr("url");//地址路径
+                var ifrm = '<iframe id="ifrm" width="100%" height="99%" frameborder="0" scrolling="no" src="' + url + '"></iframe>';//html框架用来呈现 对应菜单点击后跳转的页面
+                //声明一个变量存储 该页面是否已经被打开 （打开 true 反之 flase）
+                var isExist = $("#ttTab").tabs('exists', text);
+                //若isExist为flase 则!isExist为true
+                if (!isExist)
+                {
+                    $('#ttTab').tabs('add', {
+                        title: text,
+                        content: ifrm,
+                        closable: true,
+                        iconCls:'icon-ok'
+                    });
+                }
+            });
+            //关闭所有
+            $(".CloseAll").click(function () {
+                var isOpen = 0;//记录选项卡被关闭次数
+                $.messager.confirm('确认提示','您确定要要关闭所有窗口吗？',function(r){
+                    if(r){
+                        for (var i = 0; i < $(".ul-menu li a").length; i++) {
+                            //获取导航菜单栏的text
+                            var text =$(".ul-menu li a").eq(i).text();
+                            //判断该导航项是否在选项卡中打开
+                            var isExist = $("#ttTab").tabs('exists', text);
+                            //如果选项卡被打开则将其关闭，关闭次数加1
+                            if(isExist)
+                            {    
+                                $("#ttTab").tabs('close', text);
+                                isOpen++;
+                            }
+                        } 
+                        //若关闭选项卡的次数＜1，说明用户没有打开过选项卡，提示用户
+                        if(isOpen<1)
+                        {
+                            $.messager.alert('温馨提示','当前并无打开的选项卡！','info');
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                });
+            })
+        });
+        //修改个人资料
+        function EditUserInfo()
+        {
+            $("#dlg").dialog({ width: 350, height: 250 }).dialog("setTitle", "修改个人信息").dialog("open");
+            $("#frm").attr("src", "/User/EditUserInfo/"+@user.U_ID);
+        }
+        //修改密码
+        function EditUserPWD()
+        {
+            $("#dlg").dialog({ width: 350, height: 250 }).dialog("setTitle", "修改个人密码").dialog("open");
+            $("#frm").attr("src", "/User/EditUserPWD/"+@user.U_ID);
+        }
+    </script>
+</head>
+
+<body class="easyui-layout">
+
+    <div data-options="region:'north',border:false" style="height: 65px; background: #2E70CC;padding:10px;
+        color: #ffffff">
+        @*显示页头图片*@
+        <div style="float:left;">
+            <img alt="" src="~/Content/images/logo.png" width="120px" height="40px" />
+        </div>
+        @*显示系统名称以及当前登入用户*@
+        <div style="float: left; font-size: 14px; padding-left: 30px; padding-top: 15px;">
+            会员消费积分管理平台&nbsp;&nbsp;&nbsp;&nbsp; 当前用户:@user.U_RealName
+        </div>
+        @*关闭全部以及账户管理*@
+        <div style="float:right">
+            <a href="#" class="easyui-linkbutton CloseAll" data-options="plain:true,iconCls:'icon_CloseAll'">关闭所有</a>
+            <a href="javascript:void(0)" id="mb" class="easyui-menubutton" data-options="menu:'#mm',iconCls:'icon_Person2'">帐号管理</a>
+            <div id="mm" style="width:150px">
+                <div data-options="iconCls:'icon_Person'" onclick="EditUserInfo()">修改个人信息</div>
+                <div data-options="plain:true,iconCls:'pencil'" onclick="EditUserPWD()">修改密码</div>
+            </div>
+            
+            @*<a href="#" class="easyui-linkbutton Exit" data-options="plain:true,iconCls:'icon_Delete'">退出系统</a>*@
+        </div>
+        <div id="dd" style="float:right;padding-right:15px;padding-top:7px;" >
+            @Html.ActionLink("退出系统", "Exit", "User")
+        </div> 
+        </div>
+    <div data-options="region:'south',split:true" style="height:60px;background:#2E70CC;"></div>
+    <div data-options="region:'west',title:'菜单导航',split:true" style="width:200px;">
+        <div class="easyui-accordion" data-options="fit:true,border:false">
+            @if (user.U_Role == 1)
+            {
+                <div title="系统管理员">
+                    <ul class="ul-menu">
+                        <li><a url="/Shop/ShopManage">店铺管理</a></li>
+                        <li><a url="/CardLevels/Index">会员等级管理</a></li>
+                    </ul>
+                </div>
+            }
+            @if (user.U_Role == 2)
+            {
+                <div title="用户管理">
+                    <ul class="ul-menu">
+                        <li><a url="/ManageUser/Index">用户管理</a></li>
+                    </ul>
+                </div>
+                <div title="礼品管理">
+                    <ul class="ul-menu">
+                        <li><a url="/Gifts/Index">礼品管理</a></li>
+                    </ul>
+                </div>
+                <div title="会员管理" style="padding:10px;">
+                    <ul class="ul-menu">
+                        <li><a url="/MemCard/Index">会员列表</a></li>
+                    </ul>
+                </div>
+                <div title="会员消费" style="padding:10px;">
+                    <ul class="ul-menu">
+                        <li><a url="/FastConsume/FastConsume">快速消费</a></li>
+                        <li><a url="/FastConsume/MemCardChangePoint">会员减积分</a></li>
+                        <li><a url="/FastConsume/ConsumeLogs">消费历史记录</a></li>
+                    </ul>
+                </div>
+                <div title="积分兑换" style="padding:10px;">
+                    <ul class="ul-menu">
+                        <li><a url="/PointExchang/Index">积分兑换礼品</a></li>
+                        <li><a url="/PointExchang/PointToMoney">积分返现</a></li>
+                        <li><a url="/PointExchang/ExchangLog">兑换历史记录</a></li>
+                    </ul>
+                </div>
+                <div title="统计中心" style="padding:10px;">
+                    <ul class="ul-menu">
+                        <li><a url="/Statistics/FastConsume">快速消费统计</a></li>
+                        <li><a url="/Statistics/MemCardConsume">会员消费情况统计</a></li>
+                        <li><a url="/Statistics/ReduceIntegral">减积分统计</a></li>
+                        <li><a url="/Statistics/IntegralToMoney">积分返现统计</a></li>
+                        <li><a url="/Statistics/ExchangGiftsExchang">礼品兑换统计</a></li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+    <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <div id="ttTab" class="easyui-tabs" data-options="tools:'#tab-tools',border:false,fit:true" style="overflow:hidden;">
+        </div>
+    </div>
+    <div id="dlg" class="easyui-dialog" data-options="modal:true,closed:true">
+        <iframe id="frm" width="99%" height="98%" frameborder="0" scrolling="no"></iframe>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+﻿@model MPMS.Models.MemCards
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //编辑按钮的点击事件
+            $("#btnEdit").click(function () {
+                $.ajax({
+                    url: "/MemCard/ReportTheLossOfSthORLock",
+                    type:"post",
+                    data: { MC_CardID: $("#MC_CardID").val(), MC_State: $("#MC_State").val() },
+                    success: function (d) {
+                        alert(d);
+                        if (d != "修改成功!") return;
+                        parent.$("#dlg").dialog("close");
+                        parent.$("#MemCardInfo").datagrid('reload');
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <table align="center">
+        <tr><td>会员卡号：</td><td>@Html.EditorFor(model => model.MC_CardID, new { htmlAttributes = new { @class = "form-control", disabled = "disabled" } })</td></tr>
+        <tr><td>状态：</td><td>@Html.DropDownListFor(model => model.MC_State, ViewBag.mC_StateSel as IQueryable<SelectListItem>)</td></tr>
+        <tr><td></td><td><input type="button" id="btnEdit" value="修改" /></td></tr>
+    </table>
+</body>
+</html>

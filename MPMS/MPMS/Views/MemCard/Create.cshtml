@@ -1,0 +1,362 @@
+﻿@model MPMS.Models.MemCards
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+        var MC_IsPast = true, MC_IsPointAuto = true;
+        $(function () {
+            //判断是修改还是添加
+            if ($("#MC_ID").val()) {
+                $("#btnSubmit").val("修改");
+            }
+            else {
+                var t = new Date();
+                $("#MC_PastTime").val(t.getFullYear() + 10 + "/" + (t.getMonth() + 1) + "/" + t.getDate());
+                $("#MC_IsPast_Value").attr("checked", "checked");
+                $("#MC_IsPast:hidden").val("true");
+                alert();
+                $.ajax({
+                    url: "/MemCard/GetNextMC_CardID",
+                    success: function (d) {
+                        alert(1);
+                        $("#MC_CardID").val(parseInt(d) + 1);
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            }
+            //积分自动转换的点击事件
+            $("#MC_IsPointAuto_Value").click(function () {
+                if ($("#MC_Point").val() && $("input[name='MC_IsPointAuto.Value']:checked").val() == "true") {
+                    var reg = /^\d+$/;
+                    if (!reg.test($("#MC_Point").val())) $("#MC_Point").next().text($("#MC_Point").attr("msg"));
+                    else $.ajax({
+                        url: "/MemCard/GetLVBYMC_Point/" + $("#MC_Point").val().trim(),
+                        success: function (d) {
+                            $("#CL_ID").val(d);
+                        },
+                        error: function () {
+                            alert("err!");
+                        }
+                    });
+                }
+            });
+
+            //查询推荐人ID按钮的点击事件
+            $(".Searchbtn").click(function () {
+                var mC_RefererID = $("#MC_RefererID").val();
+                if (mC_RefererID != "") {
+                    var reg = /^\d+$/;
+                    if (!reg.test(mC_RefererID)) $(".Searchbtn").next().text("请输入纯数字");
+                    else $.ajax({
+                            url: "/MemCard/SearchMC_RefererID/" + mC_RefererID,
+                            success: function (d) {
+                                if (d == "no") {
+                                    $(".Searchbtn").next().text("查无此人");
+                                    $("#MC_RefererName").val("");
+                                }
+                                else {
+                                    $(".Searchbtn").next().text("");
+                                    $("#MC_RefererName").val(d);
+                                }
+                            },
+                            error: function () {
+                                alert("err!");
+                            }
+                        });
+                }
+                else $.messager.alert('错误', '请填推荐人ID后再点击', 'info');
+            });
+            //验证
+            $("#MC_Name, #MC_CardID").blur(function () {//会员姓名，会员卡号 非空验证
+                if (!$(this).val()) $(this).next().text($(this).attr("msg"));
+                else $(this).next().text('');
+            });
+            //会员生日月份日期验证 blur控件失去焦点时触发
+            $("#MC_Birthday_Month, #MC_Birthday_Day").blur(function () {
+                if (!$("#MC_BirthdayType:checked").val());
+                else if (!$("#MC_Birthday_Month").val() || !$("#MC_Birthday_Day").val()) $("#MC_Birthday_Month").next().next().text($("#MC_Birthday_Month").attr("msg"));
+                else {
+                    $("#MC_Birthday_Month").next().next().text('');
+                    var reg = /^([1-9]|(10)|(11)|(12))$/;//月份
+                    if (!reg.test($("#MC_Birthday_Month").val())) $("#MC_Birthday_Month").next().next().text('请输入正确的月份');
+                    else {
+                        var reg31 = /^([1-9]|(1\d)|(2\d)|(30)|(31))$/;//日期
+                        var reg30 = /^([1-9]|(1\d)|(2\d)|(30))$/;
+                        var reg29 = /^([1-9]|(1\d)|(2\d))$/;
+                        switch ($("#MC_Birthday_Month").val()) {
+                            case "1": case "3": case "5": case "7": case "8": case "10": case "12":
+                                if (!reg31.test($("#MC_Birthday_Day").val())) $("#MC_Birthday_Month").next().next().text('请输入正确的日期');
+                                else $("#MC_Birthday_Month").next().next().text('');
+                                break;
+                            case "4": case "6": case "9": case "11":
+                                if (!reg30.test($("#MC_Birthday_Day").val())) $("#MC_Birthday_Month").next().next().text('请输入正确的日期');
+                                else $("#MC_Birthday_Month").next().next().text('');
+                                break;
+                            case "2":
+                                if (!reg29.test($("#MC_Birthday_Day").val())) $("#MC_Birthday_Month").next().next().text('请输入正确的日期');
+                                else $("#MC_Birthday_Month").next().next().text('');
+                                break;
+                            default:
+                                $("#MC_Birthday_Month").next().next().text('');
+                                break;
+                        }
+                    }
+                }
+            });
+
+            //手机号码
+            $("#MC_Mobile").blur(function () {
+                if ($(this).val()) {
+                    var reg = /^1\d{10}$/;
+                    if (!reg.test($(this).val())) $(this).next().text($(this).attr("msg"));
+                    else $(this).next().text("");
+                } else $(this).next().text("");
+            });
+
+            //卡片付费
+            $("#MC_Money").blur(function () {
+                if ($(this).val()) {
+                    var reg = /^(\d+(\.\d+)|\d+)$/;
+                    if (!reg.test($(this).val())) $(this).next().text($(this).attr("msg"));
+                    else $(this).next().text("");
+                }
+            });
+
+            //积分数量
+            $("#MC_Point").blur(function () {
+                if ($(this).val()) {
+                    var reg = /^\d+$/;
+                    if (!reg.test($(this).val())) $(this).next().text($(this).attr("msg"));
+                    else $(this).next().text("");
+                }
+            });
+
+            //确认密码
+            $(".rtd").children("#MC_Password").blur(function () {
+                if (!($(this).parent().prev().children("#MC_Password").val() == $(this).val())) $(this).next().text($(this).attr("msg"));
+                else $(this).next().text('');
+            });
+
+            //是否设置过期
+            $("#MC_PastTime").blur(function () {
+                if ($("input[name='MC_IsPast.Value']:checked").val() && !$(this).val()) $(this).next().text($(this).attr("msg"));
+                else $(this).next().text('');
+            });
+
+            //推荐人ID
+            $("#MC_RefererID").blur(function () {
+                if (!$(this).val()) return;
+                else {
+                    var reg = /^\d+$/;
+                    if (!reg.test($(this).val())) $(this).next().next().text("请输入纯数字");
+                    else $(this).next().next().text('');
+                }
+            });
+
+            //提交按钮的点击事件
+            $("#btnSubmit").click(function () {
+                $("#MC_CardID, #MC_Name, #MC_PastTime, #MC_Birthday_Month, #MC_RefererID, #MC_Mobile，#MC_Money, #MC_Point").blur();
+                var verify = true;
+                $("table span").each(function () {
+                    if ($(this).text()) verify = false;
+                });
+                if (!verify) return;
+
+                var url = "/MemCard";
+
+                var MC_BirthdayType = "", MC_Sex = "", CL_ID = "", MC_IsPast = false; MC_IsPointAuto = false;
+                if ($("input[name='MC_IsPast.Value']:checked").val()) MC_IsPast = $("input[name='MC_IsPast.Value']:checked").val();
+                if ($("input[name='MC_IsPointAuto.Value']:checked").val()) MC_IsPointAuto = $("input[name='MC_IsPointAuto.Value']:checked").val();
+                if ($("#MC_BirthdayType:checked").val()) MC_BirthdayType = $("#MC_BirthdayType:checked").val();
+                if ($("#MC_Sex:checked").val()) MC_Sex = $("#MC_Sex:checked").val();
+
+                var data = {
+                        MC_CardID: $("#MC_CardID").val(),//卡号
+                        MC_Name: $("#MC_Name").val(),//姓名
+                        CL_ID: $("#CL_ID").val(),//会员等级
+                        MC_Mobile: $("#MC_Mobile").val(),//手机号码
+                        MC_Password: $("#MC_Password").val(),//卡片密码
+                        MC_Sex: MC_Sex,//会员性别
+                        MC_BirthdayType: MC_BirthdayType,//会员生日type
+                        MC_Birthday_Month: $("#MC_Birthday_Month").val(),//会员生日-月
+                        MC_Birthday_Day: $("#MC_Birthday_Day").val(),//会员生日-日
+                        MC_IsPast: MC_IsPast,//是否设置卡片过期时间
+                        MC_PastTime: $("#MC_PastTime").val(),//过期时间
+                        MC_State: $("#MC_State").val(),//卡片状态
+                        MC_Money: $("#MC_Money").val(),//卡片付费
+                        MC_Point: $("#MC_Point").val(),//积分数量
+                        MC_IsPointAuto: MC_IsPointAuto,//积分是否可以自动转换成等级
+                        MC_RefererID: $("#MC_RefererID").val(),//推 荐 人
+                        MC_RefererName: $("#MC_RefererName").val()//推荐人姓名
+                }
+                url += $(this).val() == "新增" ? "/Create" : "/Edit/" + $("#MC_ID").val();
+                $.ajax({
+                    url: url,
+                    data : data,
+                    type: "post",
+                    success: function (d) {
+                        alert(d);
+                        if (d != "添加会员成功!" && d != "编辑会员成功!") return;
+                        parent.$("#dlg").dialog("close");
+                        parent.$("#MemCardInfo").datagrid('reload');
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            });
+        });
+    </script>
+    <style type="text/css">
+        .form-control {
+            width: 200px;
+            height: 25px;
+        }
+
+        .rtd {
+            padding-left: 150px;
+            width: 300px;
+        }
+
+        .Month, .Day {
+            width: 100px;
+        }
+
+        table td span {
+            position: absolute;
+            color: red;
+            padding-left: 5px;
+            padding-top: 3px;
+        }
+    </style>
+    <title>Create</title>
+</head>
+<body>
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        <fieldset style="border-color:#A3C2EA;">
+            <legend>
+                会员基本信息
+            </legend>
+            @Html.HiddenFor(model => model.MC_ID)
+            <table>
+                <tr>
+                    <td align="left">
+                        会员卡号：@Html.EditorFor(model => model.MC_CardID, new { htmlAttributes = new { @class = "form-control", disabled = "disabled", msg = "请填写卡号" } })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        会员姓名：@Html.EditorFor(model => model.MC_Name, new { htmlAttributes = new { @class = "form-control", msg = "请填写姓名" } })
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        手机号码：@Html.EditorFor(model => model.MC_Mobile, new { htmlAttributes = new { @class = "form-control", msg = "请输入十一位手机号码" } })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        卡片密码：@Html.EditorFor(model => model.MC_Password, new { htmlAttributes = new { @class = "form-control" } })
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        确认密码：@Html.EditorFor(model => model.MC_Password, new { htmlAttributes = new { @class = "form-control", msg = "密码必须一致" } })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        会员性别：
+                        @Html.RadioButtonFor(model => model.MC_Sex, "true") 男
+                        @Html.RadioButtonFor(model => model.MC_Sex, "false") 女
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        会员等级：
+                        @Html.DropDownListFor(model => model.CL_ID, ViewBag.cardLevelSel as IQueryable<SelectListItem>, "--请选择--", new { disabled = "disabled", msg = "请选择等级" })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        会员生日：
+                        @Html.RadioButtonFor(model => model.MC_BirthdayType, "false") 农历
+                        @Html.RadioButtonFor(model => model.MC_BirthdayType, "true") 公历
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        @Html.EditorFor(model => model.MC_Birthday_Month, new { htmlAttributes = new { @class = "form-control Month", msg = "请补全会员生日" } })月
+                        @Html.EditorFor(model => model.MC_Birthday_Day, new { htmlAttributes = new { @class = "form-control Day" } })日<span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.CheckBoxFor(model => model.MC_IsPast.Value)设置卡片过期时间(到期此卡自动失效)
+                    </td>
+                    <td class="rtd">
+                        @Html.EditorFor(model => model.MC_PastTime, new { htmlAttributes = new { @class = "form-control", style = "text-align:center", msg = "请补全卡片过期时间" } })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        卡片状态：
+                        @Html.DropDownListFor(model => model.MC_State, ViewBag.mC_StateSel as IQueryable<SelectListItem>)
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        卡片付费：@Html.EditorFor(model => model.MC_Money, new { htmlAttributes = new { @class = "form-control", msg = "请输入正浮点数" } })
+                        <span></span>
+                    </td>
+                </tr>
+            </table>
+            <hr />
+            <table>
+                <tr>
+                    <td>
+                        积分数量：@Html.EditorFor(model => model.MC_Point, new { htmlAttributes = new { @class = "form-control", msg = "请输入正整数" } })
+                        <span></span>
+                    </td>
+                    <td class="rtd">
+                        @Html.CheckBoxFor(model => model.MC_IsPointAuto.Value)积分是否可以自动转换成等级？
+                    </td>
+                </tr>
+                <tr id="trReferer">
+                    <td>
+                        推 荐 人：@Html.EditorFor(model => model.MC_RefererID, new { htmlAttributes = new { @class = "form-contro1" } })
+                        <input type="button" value="查找" class="Searchbtn" msg="请输入纯数字组成的ID" /><span></span>
+                    </td>
+                    <td class="rtd">
+                        推荐人姓名：@Html.EditorFor(model => model.MC_RefererName, new { htmlAttributes = new { @class = "form-contro1", disabled = "disabled" } })
+                        <span></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="rtd">
+                        <input id="btnSubmit" type="button" value="新增" class="btn" />
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    }
+
+</body>
+</html>

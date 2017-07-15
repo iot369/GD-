@@ -1,0 +1,133 @@
+﻿@model MPMS.Models.CardLevels
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>会员等级管理</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //条件查询
+            $(".Search").click(function () {
+                $('#CardLevels').datagrid('load', {
+                    name: $("#txtName").val()
+                });
+            });
+
+            //添加
+            $(".Insert").click(function () {
+                //打开添加模态窗体
+                $("#dlg").dialog({ width: 600, height: 350 }).dialog("setTitle", "新增会员卡类别").dialog("open");
+                //跳转编辑
+                $("#frm").attr("src", "/CardLevels/Create");
+            });
+
+            //修改
+            $(".Update").click(function () {
+                //获取被选中的一行
+                var chooseRow = $("#CardLevels").datagrid("getSelected");
+                //判断有没有被选中，如果没有就给出提示
+                if (chooseRow==null) {
+                    $.messager.alert('温馨提示', '请选中操作的行！', 'warning');
+                    return false;
+                }
+                //打开修改模态窗体
+                $("#dlg").dialog({ width: 600, height: 450 }).dialog("setTitle", "修改会员卡类别").dialog("open");
+                //跳转编辑，并且传被获取行的ID
+                $("#frm").attr("src", "/CardLevels/Edit/" + chooseRow.CL_ID);
+            });
+
+            //删除
+            $(".Delete").click(function () {
+                //获取被选中的一行
+                var chooseRow = $("#CardLevels").datagrid("getSelected");
+                //判断有没有被选中，如果没有就给出提示
+                if (chooseRow == null) {
+                    $.messager.alert('温馨提示', '请选中操作的行！', 'warning');
+                    return false;
+                }
+                //删除前提示确认删除，是则删除
+                $.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
+                    if (r) {
+                        $.ajax({
+                            url: "/CardLevels/Delete",
+                            data:
+                               {
+                                   CL_ID: chooseRow.CL_ID
+                               },
+                            type: "post",
+                            dataType: "html",
+                            success: function (d) {
+                                if (d == "OK") {
+                                    alert("删除成功");  //提示
+                                    location = location;//刷新
+                                }
+                                else
+                                {
+                                    alert("存在处于该会员等级的会员，无法删除！");  //提示
+                                }
+                            },
+                            error: function (err) {
+                                alert(err);
+                            }
+                        });
+                    }
+                });
+            });
+
+            //绑定会员等级
+            $('#CardLevels').datagrid({
+                url: '/CardLevels/GetCardLevels',
+                pagination: true,      //在DataGrid控件底部显示分页工具栏
+                rownumbers: true,
+                pageSize: 4,           //初始化页面大小
+                pageList: [4, 8, 12],     //初始化页面大小选择列表
+                singleSelect: true,     //只允许选择一行
+                columns: [[
+                    { field: 'CL_ID', title: '等级编号', width: 200,align: "center" },
+                    { field: 'CL_LevelName', title: '等级名称', width: 200, align: "center" },
+                    { field: 'CL_NeedPoint', title: '所需最大积分', width: 200, align: "center" },
+                    { field: 'CL_Point', title: '积分比例', width: 200, align: "center" },
+                    {
+                        field: 'CL_Percent', title: '折扣比例', width: 100, align: "center",
+                        formatter: function (value, row, index) {  
+                            return parseFloat(value).toString().substr(0, 3); //格式化小数,精确到小数点后一位
+                        }
+                    }
+                ]],
+                toolbar: '#tb'
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="tb" style="padding: 5px; height: auto">
+        <div style="margin-bottom: 5px">
+            <a href="#" class="easyui-linkbutton Insert" iconcls="icon-add">新增</a>
+            <a href="#" class="easyui-linkbutton Update" iconcls="icon-edit">修改</a>
+            <a href="#" class="easyui-linkbutton Delete" iconcls="icon-remove">删除</a>
+        </div>
+        <div>           
+            等级名称:
+            <input id="txtName" style="width: 80px;">
+            <a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a>
+        </div>
+    </div>
+    <div id="dlg" class="easyui-dialog" data-options="modal:true,closed:true">
+        <iframe id="frm" width="99%" height="98%" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <table id="CardLevels"></table>
+</body>
+</html>

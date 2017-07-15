@@ -1,0 +1,140 @@
+﻿@model MPMS.Models.MemCards
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //会员转账 按钮的点击事件
+            $("#btnSearch").click(function () {
+                var mC_CardID = $("#SearchMC_CardID").val();
+                //数据验证
+                if (mC_CardID == $("#MC_CardID").text()) {
+                    $(this).next().text("请不要与转入卡号一致卡号");
+                    $(".OutTab span").text("");
+                }
+                else if (mC_CardID == "") {
+                    $(this).next().text("请填写卡号");
+                    $(".OutTab span").text("");
+                }
+                else if (mC_CardID != "") {
+                    var reg = /^\d+$/;
+                    if (!reg.test(mC_CardID)) $(this).next().text("请输入纯数字");
+                    else $.ajax({
+                        url: "/MemCard/SearchMemCard",
+                        data: { mC_CardID: mC_CardID },
+                        type: "post",
+                        dataType: "json",
+                        success: function (d) {
+                            if (d.msg) {
+                                $("#btnSearch").next().text(d.msg);
+                                $(".OutTab span").text("");
+                            }
+                            else {
+                                $("#btnSearch").next().text("");
+                                $("#OutMC_CardID").text(d.MC_CardID);
+                                $("#OutMC_Name").text(d.MC_Name);
+                                $("#OutMC_Point").text(d.MC_Point);
+                                $("#OutMC_TotalMoney").text(d.MC_TotalMoney);
+                            }
+                        },
+                        error: function () {
+                            alert("err!");
+                        }
+                    });
+                }
+            });
+            //验证 转账金额
+            $("#TransferMoney").blur(function () {
+                if (!$("#OutMC_CardID").text()) return;
+                if ($(this).val()) {
+                    var reg = /^(\d+(\.\d+)|\d+)$/;
+                    if (!reg.test($(this).val())) $(this).next().text($(this).attr("msg"));
+                    else if (parseFloat($(this).val()) > parseFloat($("#MC_Point").text())) $(this).next().text("转账金额请勿大于余额！");
+                    else $(this).next().text("");
+                } else $(this).next().text("请输入转账金额");
+            });
+            //转账按钮的点击事件
+            $("#btnTransfer").click(function () {
+                if (!$("#OutMC_CardID").text()) return $.messager.alert('错误', '请点击查找输入正确的转入账号', 'info');
+                $("#TransferMoney").blur();
+                var verify = true;
+                $(".span").each(function () {
+                    if ($(this).text()) verify = false;
+                });
+                if (!verify) return;
+                $.ajax({
+                    url: "/MemCard/MemCardTransfer",
+                    data: { MC_CardID: $("#MC_CardID").text(), OutMC_CardID: $("#OutMC_CardID").text(), TransferMoney: $("#TransferMoney").val(), Remark: $("#Remark").val() },
+                    type: "post",
+                    success: function (d) {
+                        alert(d);
+                        if (d.toString().indexOf("异常") != -1) return;
+                        parent.$("#dlg").dialog("close");
+                        parent.$("#MemCardInfo").datagrid('reload');
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            });
+        });
+    </script>
+    <style type="text/css">
+        .rtd {
+            padding-left: 200px;
+            width: 300px;
+        }
+        .span {
+            position:absolute; 
+            color:red;
+            padding-left: 5px;
+            padding-top: 3px;
+        }
+    </style>
+    <title > MemCardTransfer</title >
+    </head>
+<body>
+    <div id="main">
+        <fieldset style="border-color:#A3C2EA;">
+            <legend>
+                转出会员
+            </legend>
+            <table style="font-size:14px;">
+                <tr><td>卡号：<span id="MC_CardID">@Html.ValueFor(model => model.MC_CardID)</span></td><td class="rtd">姓名：<span id="MC_Name">@Html.ValueFor(model => model.MC_Name)</span></td></tr>
+                <tr><td>账户积分：<span id="MC_Point">@Html.ValueFor(model => model.MC_Point)</span></td><td class="rtd">累计消费：<span id="MC_TotalMoney">@Html.ValueFor(model => model.MC_TotalMoney)</span></td></tr>
+            </table>
+        </fieldset>
+        <br />
+        <span style="font-size:14px;">点击查找获取当前输入会员信息（会员卡号）</span><br />
+        <input type="text" id="SearchMC_CardID" />&nbsp;<input type="button" id="btnSearch" value="查找" /><span class="span"></span>
+        <fieldset style="border-color:#A3C2EA;">
+            <legend>
+                转入会员
+            </legend>
+            <table style="font-size:14px;" class="OutTab">
+                <tr><td>卡号：<span id="OutMC_CardID"></span></td><td class="rtd">姓名：<span id="OutMC_Name"></span></td></tr>
+                <tr><td>账户积分：<span id="OutMC_Point"></span></td><td class="rtd">累计消费：<span id="OutMC_TotalMoney"></span></td></tr>
+            </table>
+        </fieldset>
+        <br />
+        <table style="font-size:14px;">
+            <tr><td>转账金额：</td><td><input type="text" id="TransferMoney" name="TransferMoney" msg="请输入正确的金额" /><span class="span"></span></td></tr>
+            <tr><td>操作备注：</td><td><input type="text" id="Remark" name="Remark" /><span class="span"></span></td></tr>
+            <tr><td></td><td><input type="button" id="btnTransfer" value="转账" /></td></tr>
+        </table>
+</div>
+</body>
+</html>

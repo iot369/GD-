@@ -1,0 +1,193 @@
+﻿@model MPMS.Models.MemCards
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>快速消费</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            //查询
+            $("#btnSearch").click(function () {
+                var re = /^1[34578][0-9]{9}$/;
+                var tel = $("#cardortel").val();
+                if (tel == "") {
+                    alert("不能输入空值！！")
+                    return false;
+                }
+                if (tel.length == 11 && re.test(tel) == false) {
+                    alert("请输入正确的手机号码！")
+                    return false;
+                }
+                else {
+                    $.getJSON("/FastConsume/GetMenInfo", { mort: tel }, function (data) {
+                        if (!data.msg) {
+                            $("#MC_name").text(data.MemCards.MC_Name);
+                            $("#MC_Point").text(data.MemCards.MC_Point);
+                            $("#MC_TotalMoney").text(data.MemCards.MC_TotalMoney);
+                            $("#CL_LevelName").text(data.CardLevels.CL_LevelName);
+                            $("#CL_Percent").text(data.CardLevels.CL_Percent);
+                        }
+                        else {
+                            alert("该卡号不存在！请重新输入！！");
+                            $("#cardortel").text("");
+                            $("#MC_name").text("");
+                            $("#MC_Point").text("");
+                            $("#MC_TotalMoney").text("");
+                            $("#CL_LevelName").text("");
+                            $("#CL_Percent").text("");
+                            $("#cardortel").focus();
+                        }
+                    })
+                }
+            });
+            //焦点验证
+            $("#txtMoney").blur(function () {
+                if (!$(this).val()) return;
+                if (!$("#MC_name").text()) return alert("请先点击查询！");
+                if (!(/^(\d+|\d+.\d+)$/).test($(this).val())) {
+                    $(this).val(); $(this).focus();
+                    return alert('请输入正确的格式！');
+                }
+                var tel = $("#cardortel").val();
+                var money = $("#txtMoney").val();
+                $.getJSON("/FastConsume/GetMenInfo", { mort: tel }, function (d) {
+                    if (!d.msg) {
+                        $("#txtFactMoney").val(parseFloat(money) * parseFloat(d.CardLevels.CL_Percent)*0.1);
+                        $("#txtAutoPoint").val(Math.round((parseFloat($("#txtFactMoney").val()) / parseFloat(10))));
+                    }
+                    else {
+                        alert("错误提示！");
+                        $("#txtMoney").text("");
+                        $("#cardortel").focus();
+                    }
+                })
+            });
+            //提交
+            $("#Btnsub").click(function () {
+                //验证是否输入金额
+                if ($("#txtMoney").val() == "" || $("#cardortel").val() == "" || $("#MC_name").text()=="") {
+                    alert("请输入金额!!");
+                    return false;
+                }
+                //支付方式
+                if ( $("#RbtnMoney:checked").val()==null)
+                {
+                    alert("请选择支付方式!!!");
+                    return false;
+                }
+                    //验证是否输入积分和实际金额
+                if ($("#txtFactMoney").val() == "" || $("#txtAutoPoint").val() == "")
+                {
+                    alert("积分和实际金额必须填写！！");
+                }
+                    //提交
+                else {
+                    $.ajax({
+                        url: "/FastConsume/Fastmoney",
+                        type: "POST",
+                        datatype: "HTML",
+                        data: {
+                            nMoney: $("#txtMoney").val(),
+                            factMoney: $("#txtFactMoney").val(),
+                            autoPoint: $("#txtAutoPoint").val(),
+                            Remark: $("#RbtnMoney:checked").val()
+                        },
+                        success: function (d) {
+                            if (d == "ok") {
+                                alert("已处理");
+                                location.href = location.href;
+                            }
+                        },
+                        error: function (ex) {
+                            alert(ex);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <fieldset style="border-color:aqua">
+            <legend>
+                查找会员
+            </legend>
+            <table>
+                <tr>
+                    <td>
+                        卡号/手机号:<input id="cardortel" type="text" />
+                        <input id="btnSearch" type="button" value="查询" />
+                    </td>
+                    <td>
+                        消费时间:<span id="date"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        姓名:<span id="MC_name"></span>
+                    </td>
+                    <td>
+                        等级:<span id="CL_LevelName"></span>(折扣比例:<span id="CL_Percent"></span>)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        当前积分:<span id="MC_Point"></span>
+                    </td>
+                    <td>
+                        累计消费:￥<span id="MC_TotalMoney"></span>
+                    </td>
+                </tr>
+            </table>
+        </fieldset> 
+        <fieldset>
+            <p style="color:red">暂无优惠活动</p>
+        </fieldset>
+        <table>
+                <tr>
+                <td>
+                    请输入消费金额:<input id="txtMoney" type="text" /><font style="color:blue">此处输入金额会按会员等级自动打折</font>
+                </td>
+                </tr>
+                <tr>
+                    <td>
+                       &nbsp;&nbsp;折后总金额:<input id="txtFactMoney" type="text" />
+                    </td>
+                    <td>
+                        可自动累计积分数量:<input id="txtAutoPoint" type="text" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        付费方式:<input id="RbtnMoney" type="radio" value="现金支付" name="RbtnMoney"/>
+                    </td>
+                    <td>
+                        优惠活动:<font style="color:red">暂无</font>
+                    </td>
+                </tr>
+        </table>
+        <fieldset>
+            <legend>说明</legend>
+            输入实际消费,系统会自动按照会员等级中的设置按照一定比例积分并累计到会员账户<br />
+            在“系统管理”→“会员等级管理”中可设置RMB和积分的兑换比例<br />
+            在“系统管理”→“会员等级管理”中可设置是否允许直接输入折后总金额<br />
+            在“系统管理”→“会员等级管理”中可设置是否允许直接输入累计积分总数量<br />
+        </fieldset>
+        <input id="Btnsub" type="button" value="马上结算" />
+    </div>
+</body>
+</html>

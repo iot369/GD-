@@ -1,0 +1,46 @@
+﻿@model MPMS.Models.Users
+
+@{
+    Layout = null;
+    ViewBag.Title = "会员消费积分管理平台-登陆";
+}
+<link href="~/Content/login.css" rel="stylesheet" />
+<script src="~/Scripts/easyui/jquery-easyui-min.js"></script>
+<script src="~/Scripts/easyui/jquery-1.11.1.js"></script>
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        //登入按钮的点击事件
+        $(".login-btn").click(function () {
+            //表单数据提交
+            $("form").submit();
+        })
+    })
+</script>
+@using (Html.BeginForm())
+{
+    <div class='signup_container'>
+        <h1 class='signup_title'>
+            用户登陆
+        </h1>
+        <img src="../../Content/images/people.png" id='admin' />
+        <div id="signup_forms" class="signup_forms clearfix">
+            <div class="form_row first_row">
+                <label for="U_LoginName">
+                    请输入用户名
+                </label>
+                <input type="text" name="U_LoginName" placeholder="请输入用户名" id="U_LoginName" data-required="required" />
+            </div>
+            <div class="form_row">
+                <label for="U_Password">
+                    请输入密码`
+                </label>
+                <input type="password" name="U_Password" placeholder="请输入密码" id="U_Password" data-required="required" />
+            </div>
+        </div>
+        <div class="login-btn-set">
+            <a href='#' class='login-btn'></a>
+        </div>
+    </div>
+}
+

@@ -1,0 +1,126 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>IntegralToMoney</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script src="~/Scripts/SVSE.UI.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //页面加载查询所有积分返现
+             $("#tab").datagrid({
+                 url: "/Statistics/GetStatisticInfo/2",
+                 singleSelect: true,
+                 rownumbers: true,
+                 pagination: true,
+                 checkbox: true,
+                 pageList: [1, 2, 5, 10, 20],
+                 columns: [[
+                    {
+                        field: 'CO_OrderCode', title: '订单编号', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.c.CO_OrderCode;
+                        }
+                    },
+                    {
+                        field: 'MC_CardID', title: '会员卡号', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_CardID;
+                        }
+                    },
+                    {
+                        field: 'MC_Name', title: '会员姓名', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_Name;
+                        }
+                    },
+                    {
+                        field: 'CO_GavePoint', title: '减去积分', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.c.CO_GavePoint;
+                        }
+                    },
+                    {
+                        field: 'CO_Recash', title: '返现金', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.c.CO_Recash;
+                        }
+                    },
+                   {
+                       field: 'CO_CreateTime', title: '消费时间', width: 100, align: 'center', formatter: function (value, row) {
+                           return FormatJsonTime(row.c.CO_CreateTime);
+                       }
+                   }
+                ]]
+            });
+             $("#divTab").hide();
+            //查询按钮的点击事件
+            $("#search").click(function () {
+                if ($('#txtBDate').datebox('getValue') != "" && $('#txtEDate').datebox('getValue') != "") if ($('#txtBDate').datebox('getValue') > $('#txtEDate').datebox('getValue')) return alert('起始时间必须小于终止时间');
+                $("#divTab").show();
+                $("#tab").datagrid('load', {
+                    BTime: $('#txtBDate').datebox('getValue').trim() == "" ? "" : $('#txtBDate').datebox('getValue') + " " + $("#txtBTime").val(),
+                    ETime: $('#txtEDate').datebox('getValue').trim() == "" ? "" : $('#txtEDate').datebox('getValue') + " " + $("#txtETime").val(),
+                    MC_CardID: $("#txtMC_CardID").val().trim(),
+                    CO_OrderCode: $("#txtCO_OrderCode").val().trim(),
+                    cID: $("#CardLevels").val().trim(),
+                    ysf: $("#selCO_Recash").val(),
+                    CO_Recash: $("#txtCO_Recash").val()
+                });
+            });
+        });
+    </script>
+    <style type="text/css">
+        * {
+            font-size: 12px;
+        }
+
+        td {
+            width: 76px;
+        }
+
+        .rtd {
+            width: 230px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <fieldset>
+            <legend>查询</legend>
+            <table>
+                <tr><td>消费日期：</td><td class="rtd"><input id="txtBDate" type="text" class="easyui-datebox" required="required"></input>&nbsp;<input type="text" disabled="disabled" value="00:00:00" id="txtBTime" style="width:50px;" /></td><td align="center">至</td><td class="rtd"><input id="txtEDate" type="text" class="easyui-datebox" required="required"></input>&nbsp;<input type="text" disabled="disabled" value="23:59:59" id="txtETime" style="width:50px;" /></td><td></td></tr>
+                <tr>
+                    <td>卡号/手机：</td>
+                    <td class="rtd"><input type="text" id="txtMC_CardID" /></td>
+                    <td>按会员等级：</td>
+                    <td class="rtd">@Html.DropDownList("CardLevels", ViewBag.cardLevelSel as IQueryable<SelectListItem>, "全部")</td>
+                    <td style="width:300px;">
+                        返现金额：
+                        <select id="selCO_Recash">
+                            <option>>=</option>
+                            <option>></option>
+                            <option>=</option>
+                            <option value="<>">!=</option>
+                            <option><=</option>
+                            <option><</option>
+                        </select>
+                        &nbsp;<input type="text" value="0.00" id="txtCO_Recash" style="width:50px;" />&nbsp;<input type="button" value="查询" id="search" />
+                    </td>
+                </tr>
+                <tr><td>订单号：</td><td class="rtd"><input type="text" id="txtCO_OrderCode" /></td></tr>
+            </table>
+        </fieldset>
+        <div id="divTab">
+            <table id="tab"></table>
+        </div>
+    </div>
+</body>
+</html>

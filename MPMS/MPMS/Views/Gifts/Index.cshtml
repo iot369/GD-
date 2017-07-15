@@ -1,0 +1,106 @@
+﻿@model MPMS.Models.ExchangGifts
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/jquery-1.11.1.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-easyui-min.js" type="text/javascript"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js" type="text/javascript"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //查询
+            $(".Search").click(function () {
+                $('#ExchangGifts').datagrid('load', {
+                    EG_GiftCode: $("#txtGiftCode").val(),
+                    EG_GiftName: $("#txtGiftName").val()
+                });
+            })
+            //绑定数据
+            $('#ExchangGifts').datagrid({
+                url: '/Gifts/GetExchangGifts',
+                rownumbers: true,               //如果为true，则显示一个行号列
+                pagination: true,               //如果为true，则在DataGrid控件底部显示分页工具
+                pageSize: 5,                    //在设置分页属性的时候初始化页面大小
+                pageList: [5, 10, 15, 20],      //在设置分页属性的时候 初始化页面大小选择列表
+                singleSelect: true,             //如果为true，则只允许选择一行
+
+                columns: [[
+                    { field: 'EG_ID', title: '礼品编号', width: 100 },
+                    { field: 'EG_GiftCode', title: '礼品编码', width: 100 },
+                    { field: 'EG_GiftName', title: '礼品名称', width: 100 },
+                    { field: 'EG_Point', title: '所需积分', width: 100 },
+                    { field: 'EG_Number', title: '总数量总数量', width: 100 },
+                    { field: 'EG_ExchangNum', title: '已兑换的数量', width: 100 },
+                    { field: 'EG_Remark', title: '备注', width: 100 },
+                ]]
+            });
+            //添加
+            $('.Insert').click(function () {
+                $("#dlg").dialog({ width: 400, height: 300 }).dialog("setTitle", "新增礼品").dialog("open");
+                $("#frm").attr("src", "/Gifts/Create");
+            });
+            //更新
+            $(".Update").click(function () {
+                var row = $("#ExchangGifts").datagrid("getSelected");
+                if (row == null) {
+                    $.messager.alert('警告', '请选择要选中的行');
+                    return;
+                }
+                $("#dlg").dialog({ width: 400, height: 300 }).dialog("setTitle", "修改礼品").dialog("open");
+                $("#frm").attr("src", "/Gifts/Edit/" + row.EG_ID);
+            });
+            //删除
+            $(".Delete").click(function () {
+                var row = $("#ExchangGifts").datagrid("getSelected");
+                if (row == null) {
+                    $.messager.alert('警告', '请选择要选中的行');
+                    return;
+                }
+                $.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
+                    if (r) {
+                        $.get("/Gifts/Delete", { EG_ID: row.EG_ID },
+                            function () {
+                                alert("删除成功");
+                                $('#ExchangGifts').datagrid('reload');
+                            });
+                    }
+                });
+            });
+        })
+    </script>
+</head>
+<body>
+    <body>
+        <div id="tb" style="padding: 5px; height: auto">
+            <div style="margin-bottom: 5px">
+                <a href="#" class="easyui-linkbutton Insert" iconcls="icon-add">新增</a>
+                <a href="#" class="easyui-linkbutton Update" iconcls="icon-edit">修改</a>
+                <a href="#" class="easyui-linkbutton Delete" iconcls="icon-remove">删除</a>
+
+            </div>
+            <div>
+                礼品代号:
+                <input id="txtGiftCode" style="width: 80px;">
+                礼品名称:
+                <input id="txtGiftName" style="width: 80px;">
+                <a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a>
+            </div>
+        </div>
+        <div id="dlg" class="easyui-dialog" data-options="modal:true,closed:true">
+            <iframe id="frm" width="99%" height="98%" frameborder="0" scrolling="no"></iframe>
+        </div>
+        <table id="ExchangGifts"></table>
+    </body>
+</body>
+</html>

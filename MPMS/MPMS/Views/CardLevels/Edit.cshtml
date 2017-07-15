@@ -1,0 +1,147 @@
+﻿@model MPMS.Models.CardLevels
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Edit</title>
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $(function () {
+
+            //修改
+            $("#btnUpdate").click(function () {
+               //获取
+                var CL_ID = $("#CL_ID").val();
+                var CL_LevelName = $("#CL_LevelName").val();
+                var CL_NeedPoint = $("#CL_NeedPoint").val();
+                var CL_Point = $("#CL_Point").val();
+                var CL_Percent = $("#CL_Percent").val();
+                //验证
+                if (CL_LevelName == "") {
+                    alert("会员等级名称不能为空");
+                    return;
+                }
+                if (CL_NeedPoint == "") {
+                    alert("所需最大积分不能为空");
+                    return;
+                }
+
+                if (CL_Point == "") {
+                    alert("兑换比例不能为空");
+                    return;
+                }
+                var re =/^[1-9]\d*$/;
+                if (!re.test(CL_Point)) {
+                    alert("兑换比例必须为大于0的正整数！");
+                    return;
+                }
+                if (CL_Percent == "") {
+                    alert("折扣比例不能为空");
+                    return;
+                }
+                var p = /^0\.\d{0,2}$/;
+                if (!p.test(CL_Percent)) {
+                    alert("折扣比例数据错误");
+                    return;
+                }
+                //修改
+                $.ajax({
+                    url: "/CardLevels/Edit",
+                    data:
+                       {
+                           CL_ID: CL_ID,
+                           CL_LevelName: CL_LevelName,
+                           CL_NeedPoint: CL_NeedPoint,
+                           CL_Point: CL_Point,
+                           CL_Percent: CL_Percent
+                       },
+                    type: "post",
+                    dataType: "html",
+                    success: function (d) {
+                        if (d == "OK") {
+                            alert("修改成功");
+                            window.parent.$('#dlg').dialog('close'); //关闭模态窗体
+                            window.parent.$('#CardLevels').datagrid('reload');  //刷新父页面
+                        }
+                        else
+                        {
+                            alert("会员等级已存在，请重新输入！");
+                        }
+                    },
+                    error: function (err) {
+                        alert("错误，请重试！！");
+                    }
+
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        
+        <div class="form-horizontal">
+
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            @Html.HiddenFor(model => model.CL_ID)
+    
+            <table style="font-size: 12px;" align="center">
+                <tr>
+                    <td>
+                        等级名称：
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.CL_LevelName)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        所需最大积分：
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.CL_NeedPoint)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        兑换比例：
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.CL_Point)
+                        <p style="color:red;font-size:smaller;">
+                            (注：消费xx人民币自动兑换成1积分,默认：10RMB=1积分)
+                        </p>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        折扣比例：
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.CL_Percent)
+                        <p style="color:red;font-size:smaller;">
+                            (注：达到此等级时，所享受的折扣率，如：0.87表示八折，1折表示不打折)
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="btnUpdate" type="button" value="修改" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    }
+    
+</body>
+</html>

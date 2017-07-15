@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MPMS_DB" Class="LINQDBDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="WebSettings" ConnectionString="Data Source=.;Initial Catalog=MPMS_DB;Integrated Security=True" SettingsObjectName="System.Configuration.ConfigurationManager.ConnectionStrings" SettingsPropertyName="MPMSDBConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.Users" Member="Users">
+    <Type Name="Users">
+      <Column Name="U_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="U_LoginName" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="U_Password" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="U_RealName" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="U_Sex" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="U_Telephone" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="U_Role" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="U_CanDelete" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Shops" Member="Shops">
+    <Type Name="Shops">
+      <Column Name="S_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_Name" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="S_Category" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="S_ContactName" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="S_ContactTel" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="S_Address" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
+      <Column Name="S_Remark" Type="System.String" DbType="VarChar(100)" CanBeNull="true" />
+      <Column Name="S_IsHasSetAdmin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="S_CreateTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.CategoryItems" Member="CategoryItems">
+    <Type Name="CategoryItems">
+      <Column Name="C_Category" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="CI_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CI_Name" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.CardLevels" Member="CardLevels">
+    <Type Name="CardLevels">
+      <Column Name="CL_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="CL_LevelName" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="CL_NeedPoint" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="CL_Point" Type="System.Double" DbType="Float" CanBeNull="true" />
+      <Column Name="CL_Percent" Type="System.Double" DbType="Float" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Categories" Member="Categories">
+    <Type Name="Categories">
+      <Column Name="C_Category" Type="System.String" DbType="VarChar(20) NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="C_Illustration" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="C_IsShow" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ConsumeOrders" Member="ConsumeOrders">
+    <Type Name="ConsumeOrders">
+      <Column Name="CO_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="U_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CO_OrderCode" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="CO_OrderType" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="MC_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_CardID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EG_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CO_TotalMoney" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="CO_DiscountMoney" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="CO_GavePoint" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="CO_Recash" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="CO_Remark" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="CO_CreateTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ExchangGifts" Member="ExchangGifts">
+    <Type Name="ExchangGifts">
+      <Column Name="EG_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EG_GiftCode" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="EG_GiftName" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="EG_Photo" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+      <Column Name="EG_Point" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EG_Number" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EG_ExchangNum" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EG_Remark" Type="System.String" DbType="VarChar(255)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ExchangLogs" Member="ExchangLogs">
+    <Type Name="ExchangLogs">
+      <Column Name="EL_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="U_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_CardID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MC_Name" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="EG_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EG_GiftCode" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EG_GiftName" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EL_Number" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EL_Point" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="EL_CreateTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.TransferLogs" Member="TransferLogs">
+    <Type Name="TransferLogs">
+      <Column Name="TL_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="U_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TL_FromMC_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TL_FromMC_CardID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="TL_ToMC_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TL_ToMC_CardID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="TL_TransferMoney" Type="System.Decimal" DbType="Money" CanBeNull="true" />
+      <Column Name="TL_Remark" Type="System.String" DbType="VarChar(200)" CanBeNull="true" />
+      <Column Name="TL_CreateTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.MemCards" Member="MemCards">
+    <Type Name="MemCards">
+      <Column Name="MC_ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="CL_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="S_ID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_CardID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MC_Password" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="MC_Name" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="MC_Sex" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="MC_Mobile" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MC_Photo" Type="System.String" DbType="VarChar(200)" CanBeNull="true" />
+      <Column Name="MC_Birthday_Month" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_Birthday_Day" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_BirthdayType" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="MC_IsPast" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="MC_PastTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="MC_Point" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_Money" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="MC_TotalMoney" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="MC_TotalCount" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_State" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_IsPointAuto" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="MC_RefererID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="MC_RefererCard" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="MC_RefererName" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="MC_CreateTime" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>

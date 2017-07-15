@@ -1,0 +1,148 @@
+﻿@model MPMS.Models.ExchangGifts
+
+@{
+    ViewBag.Title = "礼品店铺";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Edit</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/jquery-1.11.1.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-easyui-min.js" type="text/javascript"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js" type="text/javascript"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //编辑按钮的点击事件
+            $("#btnEdit").click(function () {
+                var EG_ID = $("#EG_ID").val();
+                var EG_GiftCode = $("#EG_GiftCode").val();
+                var EG_GiftName = $("#EG_GiftName").val();
+                var EG_Photo = $("#EG_Photo").val();
+                var EG_Point = $("#EG_Point").val();
+                var EG_Number = $("#EG_Number").val();
+                var EG_Remark = $("#EG_Remark").val();
+                //数据验证
+                var isIntSix = /^[0-9]{6,6}$/
+                if (!isIntSix.test(EG_GiftCode)) {
+                    alert("礼品编码应为6位整数");
+                    return;
+                }
+                else if (EG_GiftName == "") {
+                    alert("礼品名称不能为空");
+                    return;
+                } else if (EG_Point == "") {
+                    alert("所需积分不能为空");
+                    return;
+                } else if (EG_Number == "") {
+                    alert("礼品数量不能为空");
+                    return;
+                }
+                else {
+                    var isInt = /^[1-9]\d*$/;
+                    if (!isInt.test(EG_Point)) {
+                        alert("所需积必须为整数");
+                        return;
+                    }
+                    if (!isInt.test(EG_Number)) {
+                        alert("礼品数量为整数");
+                        return;
+                    }
+                }
+
+                $.ajax({
+                    url: "/Gifts/Edit",
+                    data:
+                        {
+                            EG_ID: EG_ID,
+                            EG_GiftCode: EG_GiftCode,
+                            EG_GiftName: EG_GiftName,
+                            EG_Photo: EG_Photo,
+                            EG_Point: EG_Point,
+                            EG_Number: EG_Number,
+                            EG_Remark: EG_Remark
+                        },
+                    dataType: "html",
+                    type: "post",
+                    success: function (data) {
+                        if (data == "OK") {
+                            alert('修改成功');
+                            window.parent.$('#dlg').dialog('close');
+                            window.parent.$('#ExchangGifts').datagrid('reload');
+                        }
+                        else
+                        {
+                            alert('礼品编码已存在，请勿重复添加！');
+                        }
+                    }, error: function () {
+                        alert("连接超时")
+                    }
+                })
+            })
+        })
+    </script>
+</head>
+<body>
+    <div> 
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            <table style="font-size: 12px;" align="center">
+                <tr>
+                    <td>
+                        礼品编码
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.EG_GiftCode)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        礼品名称
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.EG_GiftName)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        所需积分
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.EG_Point)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        礼品数量
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.EG_Number)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        备注
+                    </td>
+                    <td>
+                        @Html.EditorFor(model => model.EG_Remark)
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="btnEdit" type="button" value="保存" />
+                    </td>
+                </tr>
+                @Html.HiddenFor(model => model.EG_ID)
+            </table>
+        }
+    </div>
+</body>
+</html>

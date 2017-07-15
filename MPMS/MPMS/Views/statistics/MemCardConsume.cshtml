@@ -1,0 +1,113 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MemCardConsume</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script src="~/Scripts/SVSE.UI.js"></script>
+    <script type="text/javascript">
+        //绑定会员消费信息
+        function getMemInfo(MCCardID) {
+            $("#tab").datagrid({
+                url: "/Statistics/GetStatisticInfo/-1",
+                singleSelect: true,
+                rownumbers: true,
+                pagination: true,
+                pageList: [1, 2, 5, 10, 20],
+                columns: [[
+                   {
+                       field: 'CO_OrderCode', title: '订单编号', width: 100, align: 'center', formatter: function (value, row) {
+                           return row.c.CO_OrderCode;
+                       }
+                   },
+                   {
+                       field: 'MC_CardID', title: '会员卡号', width: 100, align: 'center', formatter: function (value, row) {
+                           return row.m.MC_CardID;
+                       }
+                   },
+                   {
+                       field: 'MC_Name', title: '会员姓名', width: 100, align: 'center', formatter: function (value, row) {
+                           return row.m.MC_Name;
+                       }
+                   },
+                   {
+                       field: 'CO_DiscountMoney', title: '消费金额', width: 100, align: 'center', formatter: function (value, row) {
+                           return row.c.CO_DiscountMoney;
+                       }
+                   },
+                   {
+                       field: 'GetPoint', title: '获得积分', width: 100, align: 'center', formatter: function (value, row) {
+                           return parseInt(row.c.CO_DiscountMoney);
+                       }
+                   },
+                   {
+                       field: 'CO_CreateTime', title: '消费时间', width: 100, align: 'center', formatter: function (value, row) {
+                           return FormatJsonTime(row.c.CO_CreateTime);
+                       }
+                   },
+                   { field: 'CI_Name', title: '类型', width: 100, align: 'center' }
+                ]]
+            });
+        }
+
+        $(function () {
+            //页面加载显示“会员列表”
+            $("#MemCardInfo").datagrid({
+                url: "/Statistics/GetMemCardInfo",
+                singleSelect: true,
+                rownumbers: true,
+                pagination: true,
+                pageList: [1, 2, 5, 10, 20],
+                columns: [[
+                    { field: 'MC_CardID', title: '会员卡号', width: 100, align: 'center' },
+                    { field: 'MC_Name', title: '会员姓名', width: 100, align: 'center' },
+                    { field: 'MC_TotalMoney', title: '累计消费', width: 100, align: 'center' }
+                ]],
+                //选中会员信息表的行 查询详细消费
+                onSelect: function () {
+                    getMemInfo();
+                    $("#tab").datagrid('load', {
+                        MC_CardID:$("#MemCardInfo").datagrid("getSelected").MC_CardID
+                    });
+                }
+            });
+
+            //查询按钮的点击事件
+            $("#search").click(function () {
+                getMemInfo();
+                //条件查询
+                $("#tab").datagrid('load', {
+                    BTime: $('#txtBDate').datebox('getValue').trim() == "" ? "" : $('#txtBDate').datebox('getValue') + " " + $("#txtBTime").val(),
+                    ETime: $('#txtEDate').datebox('getValue').trim() == "" ? "" : $('#txtEDate').datebox('getValue') + " " + $("#txtETime").val(),
+                    MC_CardID: $("#txtMC_CardID").val().trim(),
+                    CO_OrderType: $("#CO_OrderType").val()
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="main">
+        <fieldset>
+            <legend>查询</legend>
+            消费日期：<input id="txtBDate" type="text" class="easyui-datebox"></input>&nbsp;<input type="text" value="00:00:00" id="txtBTime" style="width:50px;" />至<input id="txtEDate" type="text" class="easyui-datebox" required="required"></input>&nbsp;<input type="text" disabled="disabled" value="23:59:59" id="txtETime" style="width:50px;" />卡号/手机：<input type="text" id="txtMC_CardID" />消费类型：@Html.DropDownList("CO_OrderType", ViewBag.cO_OrderType as IQueryable<SelectListItem>, "不限消费类型")<input type="button" value="查询" id="search" />
+        </fieldset>
+        <table id="MemCardInfo"></table>
+        <div id="divTab">
+            <table id="tab"></table>
+        </div>
+    </div>
+</body>
+</html>

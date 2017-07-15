@@ -1,0 +1,138 @@
+﻿@model MPMS.Models.Users
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //查询
+            $(".Search").click(function () {
+                $('#UserInfo').datagrid('load', {
+                    LoginName: $("#txtLoginName").val(),
+                    RealName: $("#txtRealName").val(),
+                    Telephone: $("#txtTelephone").val(),
+                })
+            });
+
+            //新增
+            $(".Insert").click(function () {
+                $("#dlg").dialog({ width: 400, height: 350 }).dialog("setTitle", "新增用户").dialog("open");
+                $("#frm").attr("src", "/ManageUser/Create");
+            })
+
+            //删除
+            $(".Delete").click(function () {
+                var row = $("#UserInfo").datagrid('getSelected');//获取选中信息的第一条信息
+                if (row == null) {
+                    $.messager.alert('提示', '请选中要操作的行！！！');
+                    return;
+                } else {
+                    $.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
+                        if (r) {
+                            $.get("/ManageUser/Delete/", { uid: row.U_ID },
+                                function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert('提示', '删除成功');
+                                        location = location;
+                                    } else {
+                                        $.messager.alert('提示', '该用户不能删除', 'error');
+                                        return;
+                                    }
+                                }
+                            );
+                        }
+                    });
+                }
+            });
+            //编辑
+            $(".Update").click(function () {
+                var row = $("#UserInfo").datagrid('getSelected');
+                if (row == null) {
+                    alert('请选择一行数据修改');
+                    return null;
+                } else {
+                    $("#dlg").dialog({ width: 400, height: 350 }).dialog("setTitle", "修改用户").dialog("open");
+                    $("#frm").attr("src", "/ManageUser/Edit/" + row.U_ID);
+                }
+            });
+            //页面加载
+            $("#UserInfo").datagrid({
+                url: '/ManageUser/GetUserInfo',//获取数据胡具体控制器以及动作
+                rownumbers: true,
+                pagination: true,
+                pageSize: 5,
+                pageList: [5, 10, 15, 20],
+                singleSelect: true,//只允许选中一行
+                columns: [[
+                    { field: 'U_ID', title: '用户编号', width: 100 },
+                    { field: 'S_ID', title: '店铺编号', width: 100 },
+                    { field: 'U_LoginName', title: '用户登录名', width: 100 },
+                    { field: 'U_Password', title: '密码', width: 100 },
+                    { field: 'U_RealName', title: '真实姓名', width: 100 },
+                    { field: 'U_Sex', title: '性别', width: 100 },
+                    { field: 'U_Telephone', title: '电话', width: 100 },
+                    {
+                        field: 'U_Role', title: '角色', width: 100,
+                        formatter: function (value, row, index) {
+                            if (row.U_Role == "1") {
+                                return "系统管理员";
+                            } else if (row.U_Role == "2") {
+                                return "店长";
+                            } else if (row.U_Role == "3") {
+                                return "业务员";
+                            }
+                        }
+                    },
+                    {
+                        field: 'U_CanDelete', title: '是否可以删除', width: 100,
+                        formatter: function (value, row, index) {
+                            if (row.U_CanDelete == "0") {
+                                return "否";
+                            } else {
+                                return "是";
+                            }
+                        }
+                    }
+                ]],
+                toolbar: "#tb"
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="tb" style="padding: 5px; height: auto">
+        <div style="margin-bottom: 5px">
+            <a href="#" class="easyui-linkbutton Insert" iconcls="icon-add">新增</a>
+            <a href="#" class="easyui-linkbutton Update" iconcls="icon-edit">修改</a>
+            <a href="#" class="easyui-linkbutton Delete" iconcls="icon-remove">删除</a>
+
+        </div>
+        <div>
+            登陆名:
+            <input id="txtLoginName" style="width: 80px;">
+            真实姓名:
+            <input id="txtRealName" style="width: 80px;">
+            联系电话:
+            <input id="txtTelephone" style="width: 80px;">
+            <a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a>
+        </div>
+    </div>
+    <div id="dlg" class="easyui-dialog" data-options="modal:true,closed:true">
+        <iframe id="frm" width="99%" height="98%" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <table id="UserInfo"></table>
+</body>
+</html>

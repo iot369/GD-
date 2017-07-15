@@ -1,0 +1,126 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MemCardChangePoint</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            //查询
+            $("#btnSearch").click(function () {
+                var re = /^1[34578][0-9]{9}$/;
+                var tel = $("#cardortel").val();
+                if (tel == "") {
+                    alert("卡号/手机号不能为空！！")
+                    return false;
+                }
+                if (tel.length == 11 && re.test(tel) == false) {
+                    alert("请输入正确的手机号码！")
+                    return false;
+                }
+                else {
+                    $.getJSON("/FastConsume/GetMenInfo", { mort: tel }, function (data) {
+                        
+                        if (!data.msg) {
+                            $("#MC_name").text(data.MemCards.MC_Name);
+                            $("#MC_Point").text(data.MemCards.MC_Point);
+                            $("#MC_TotalMoney").text(data.MemCards.MC_TotalMoney);
+                            $("#CL_LevelName").text(data.CardLevels.CL_LevelName);
+                            $("#CL_Percent").text(data.CardLevels.CL_Percent);
+                            $("#cradOrTel").val(tel);
+                        }
+                        else {
+                            alert(data.msg);
+                            alert("该卡号不存在！请重新输入！！");
+                            $("#cardortel").text("");
+                            $("#MC_name").text("");
+                            $("#MC_Point").text("");
+                            $("#MC_TotalMoney").text("");
+                            $("#CL_LevelName").text("");
+                            $("#CL_Percent").text("");
+                            $("#cardortel").focus();
+                        }
+                    })
+                }
+            });
+            $("#btnExchang").click(function () {
+                if (!$("#MC_name").text()) return alert('请先点击查询!');
+                var changePoint = $('#txtChangePoint').val();
+                if (!(/^\d+$/).test(changePoint)) return alert('请输入正整数积分!');
+                else if (parseInt(changePoint) > parseInt($("#MC_Point").text())) return alert('请不要超过已有积分!');
+                $.ajax({
+                    url: "/FastConsume/ChangePoint",
+                    data: {
+                        mort: $('#cradOrTel').val(),
+                        changePoint: changePoint,
+                        Remark: $('#txtRemark').val()
+                    },
+                    type: 'post',
+                    success: function (d) {
+                        if (d == "ok") {
+                            alert("已处理");
+                            location.href = location.href;
+                        } else alert(d);
+                    },
+                    error: function (ex) {
+                        alert(ex);
+                    }
+                });
+            });
+        });
+</script>
+</head>
+<body>
+    <fieldset style="border-color:aqua">
+        <legend>
+            查找会员
+        </legend>
+        <table>
+            <tr>
+                <td>
+                    卡号/手机号:<input id="cardortel" type="text" />
+                    <input id="btnSearch" type="button" value="查询" /><input type="hidden" id="cradOrTel" />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>
+                    姓名:<span id="MC_name"></span>
+                </td>
+                <td>
+                    等级:<span id="CL_LevelName"></span>(折扣比例:<span id="CL_Percent"></span>)
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    当前积分:<span id="MC_Point"></span>
+                </td>
+                <td>
+                    累计消费:￥<span id="MC_TotalMoney"></span>
+                </td>
+            </tr>
+        </table>
+    </fieldset> 
+    <fieldset style="border-color:aqua">
+        <legend>
+            减积分信息
+        </legend>
+        <table>
+            <tr><td>扣除积分：</td><td><input type="text" id="txtChangePoint" /></td></tr>
+            <tr><td>备注：</td><td><input type="text" id="txtRemark" /></td></tr>
+        </table>
+    </fieldset> 
+    <input type="button" value="马上兑换" id="btnExchang" />
+</body>
+</html>

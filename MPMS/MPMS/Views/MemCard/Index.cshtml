@@ -1,0 +1,194 @@
+﻿@model MPMS.Models.MemCards
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" /><link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        //弹框
+        function showDig(t, w, h, url) {
+            $("#dlg").dialog({
+                title: t,
+                width: w,
+                height: h
+            }).dialog("open");
+            $("#frm").attr("src", url);
+        }
+        $(function () {
+            //页面加载 绑定数据
+            $("#MemCardInfo").datagrid({
+                url: "/MemCard/GetMemCardInfo",
+                singleSelect: true,
+                rownumbers: true,
+                pagination: true,
+                checkbox: true,
+                pageList: [1, 2, 5, 10, 20],
+                columns: [[
+                    {
+                        field: 'MC_CardID', title: '会员卡号', width: 100, align: 'center', formatter: function (value,row) {
+                            return row.m.MC_CardID;
+                        }
+                    },
+                    {
+                        field: 'MC_Name', title: '会员姓名', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_Name;
+                        }
+                    },
+                    {
+                        field: 'MC_Mobile', title: '手机号码', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_Mobile;
+                        }
+                    },
+                    {
+                        field: 'MC_TotalMoney', title: '累计消费', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_TotalMoney;
+                        }
+                    },
+                    {
+                        field: 'MC_State', title: '会员卡状态', width: 100, align: 'center', formatter: function (value, row) {
+                            if (row.m.MC_State == "1") return "正常";
+                            if (row.m.MC_State == "2") return "挂失";
+                            if (row.m.MC_State == "3") return "锁定";
+                        }
+                    },
+                    {
+                        field: 'MC_Point', title: '当前积分', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_Point;
+                        }
+                    },
+                    {
+                        field: 'MC_Sex', title: '性别', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.m.MC_Sex == 1 ? "男" : (row.m.MC_Sex == 0 ? "女" : "未设置");
+                        }
+                    },
+                    {
+                        field: 'MC_CreateTime', title: '登记时间', width: 100, align: 'center', formatter: function (value, row) {
+                            return FormatJsonTime(row.m.MC_CreateTime);
+                        }
+                    },
+                    {
+                        field: 'CL_LevelName', title: '当前等级', width: 100, align: 'center', formatter: function (value, row) {
+                            return row.c.CL_LevelName;
+                        }
+                    }
+                ]]
+            });
+
+            //新增按钮的点击事件 跳转
+            $(".Insert").click(function () {
+                showDig("新增会员", 1000, 550, "/MemCard/Create?type=Add")
+            });
+
+            //更新
+            $(".Update").click(function () {
+                var row = $("#MemCardInfo").datagrid("getSelected");
+                if (!row) return $.messager.alert('错误', '请选择需要操作的行', 'info');
+                else if(row.m.MC_State != 1) return $.messager.alert('错误', '当前状态无法使用次功能', 'info');
+                else showDig("编辑会员", 1000, 550, "/MemCard/Create?type=Edit&&id=" + row.m.MC_ID)
+            });
+
+            //删除
+            $(".Delete").click(function () {
+                var row = $("#MemCardInfo").datagrid("getSelected");
+                if (!row) return $.messager.alert('错误', '请选择需要操作的行', 'info');
+                $.messager.confirm('温馨提示', '您确定要删除所选中的信息吗？', function (r) {
+                    if (r) {
+                        $.get("/MemCard/Delete", { id: row.m.MC_ID }, function (d) {
+                            alert(d);
+                            $("#MemCardInfo").datagrid("reload");
+                        });
+                    }
+                });
+            });
+
+            //挂失/锁定
+            $(".ReportTheLossOfSthORLock").click(function () {
+                var row = $("#MemCardInfo").datagrid("getSelected");
+                if (!row) return $.messager.alert('错误', '请选择需要操作的行', 'info');
+                showDig("挂失/锁定", 400, 170, "/MemCard/ReportTheLossOfSthORLock/" + row.m.MC_ID)
+            });
+
+            //会员转账
+            $(".MemCardTransfer").click(function () {
+                var row = $("#MemCardInfo").datagrid("getSelected");
+                if (!row) return $.messager.alert('错误', '请选择需要操作的行', 'info');
+                else if (row.m.MC_State != 1) return $.messager.alert('错误', '当前状态无法使用次功能', 'info');
+                showDig("会员转账", 700, 400, "/MemCard/MemCardTransfer/" + row.m.MC_ID)
+            });
+
+            //会员换卡
+            $(".MemCardReplaceCard").click(function () {
+                var row = $("#MemCardInfo").datagrid("getSelected");
+                if (!row) return $.messager.alert('错误', '请选择需要操作的行', 'info');
+                showDig("会员换卡", 700, 400, "/MemCard/MemCardReplaceCard/" + row.m.MC_ID)
+            });
+
+            //查询
+            $(".Search").click(function () {
+                $("#MemCardInfo").datagrid('load', {
+                    mID: $("#txtMC_CardID").val().trim(),
+                    mName: $("#txtMC_Name").val().trim(),
+                    mMobile: $("#txtMC_Mobile").val().trim(),
+                    cID: $("#CardLevels").val().trim(),
+                    mState: $("#MC_State").val().trim()
+                });
+            });
+
+            //导入Excel
+            $(".OutExcel").click(function () {
+                location = '/MemCard/OutExcel';
+            });
+            //导出Excel
+            $(".UpLoad").click(function () {
+                showDig("导入Excel", 450, 100, "/MemCard/UpLoad")
+            });
+        });
+    </script>
+    <title>Index</title>
+</head>
+<body>
+    <div id="tb" style="padding: 5px; height: auto">
+        <div style="margin-bottom: 5px">
+            <a href="#" class="easyui-linkbutton Insert" iconcls="icon-add">新增</a>
+            <a href="#" class="easyui-linkbutton Update" iconcls="icon-edit">修改</a>
+            <a href="#" class="easyui-linkbutton Delete" iconcls="icon-remove">删除</a>
+            <a href="#" class="easyui-linkbutton ReportTheLossOfSthORLock" iconcls="icon-lock">挂失/锁定</a>
+            <a href="#" class="easyui-linkbutton MemCardTransfer" iconcls="icon1">会员转账</a>
+            <a href="#" class="easyui-linkbutton MemCardReplaceCard" iconcls="icon-reload">会员换卡</a>
+            <a href="#" class="easyui-linkbutton OutExcel" iconcls="excel-in">导出Excel</a>
+            <a href="#" class="easyui-linkbutton UpLoad" iconcls="icon2">导入Excel</a>
+            
+        </div>
+        <div>
+            会员卡号:
+            <input id="txtMC_CardID" style="width: 80px;">
+            会员姓名:
+            <input id="txtMC_Name" style="width: 80px;">
+            电话:
+            <input id="txtMC_Mobile" style="width: 80px;">
+            会员等级:
+            @Html.DropDownList("CardLevels", ViewBag.cardLevelSel as IQueryable<SelectListItem>, "全部")
+            状态:
+            @Html.DropDownList("MC_State", ViewBag.mC_StateSel as IQueryable<SelectListItem>)
+            <br />
+            <a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a>
+        </div>
+    </div>
+    <div id="dlg" class="easyui-dialog" data-options="modal:true,closed:true">
+        <iframe id="frm" width="99%" height="98%" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <table id="MemCardInfo"></table>
+</body>
+</html>

@@ -1,0 +1,110 @@
+﻿@model MPMS.Models.MemCards
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //获取会员编号
+            $.ajax({
+                url: "/MemCard/GetNextMC_CardID",
+                success: function (d) {
+                    $("#newMcCard").text(parseInt(d) + 1);
+                },
+                error: function () {
+                    alert("err!");
+                }
+            });
+
+           //数据验证 密码
+            $("#oldPWD").blur(function () {
+                if(!$(this).val())  $(this).next().text("请输入旧密码!");
+                else if ($(this).val() != $("#MC_Password").val()) $(this).next().text("您的密码与原密码有误!");
+                else $(this).next().text("");
+            });
+            $("#newPWD").blur(function () {
+                if (!$(this).val()) $(this).next().text("请输入密码!");
+                else $(this).next().text("");
+            });
+            $("#newPWD1").blur(function () {
+                if ($(this).val() != $("#newPWD").val()) $(this).next().text("两次密码输入不一样!");
+                else $(this).next().text("");
+            });
+
+            //保存按钮的点击事件
+            $("#btnSubmit").click(function () {
+                $("#oldPWD, #newPWD, #newPWD1").blur();
+                var verify = true;
+                $(".span").each(function () {
+                    if ($(this).text()) verify = false;
+                });
+                if (!verify) return;
+                $.ajax({
+                    url: "/MemCard/MemCardReplaceCard",
+                    type: "post",
+                    data: { MC_ID: $("#MC_ID").val(), newMcCard: $("#newMcCard").text(), newPWD: $("#newPWD").val() },
+                    success: function (d) {
+                        alert(d);
+                        if (d.toString().indexOf("异常") != -1) return;
+                        parent.$("#dlg").dialog("close");
+                        parent.$("#MemCardInfo").datagrid('reload');//刷新
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            });
+        });
+    </script>
+    <title>MemCardReplaceCard</title>
+    <style type="text/css">
+        td {line-height:30px}
+        .span {
+            position: absolute;
+            color: red;
+            padding-left: 5px;
+            padding-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <fieldset style="border-color:#A3C2EA;">
+            <legend>
+                会员卡基本信息
+            </legend>
+            <table style="font-size:14px;">
+                <tr><td>会员姓名：<span id="MC_Name">@Html.ValueFor(model => model.MC_Name)</span></td></tr>
+                <tr><td>会员等级：<span id="MC_TotalMoney">@Html.ValueFor(model => model.CL_ID)</span></td></tr>
+                <tr><td>登记日期：<span id="MC_TotalMoney">@Html.ValueFor(model => model.MC_CreateTime)</span></td></tr>
+            </table>
+        </fieldset>
+        @Html.HiddenFor(m => m.MC_Password)
+        @Html.HiddenFor(m => m.MC_ID)
+        <fieldset style="border-color:#A3C2EA;">
+            <legend>
+                换卡信息
+            </legend>
+            <table style="font-size:14px;">
+                <tr><td>请输入此卡密码：</td><td><input type="password" id="oldPWD" /><span class="span"></span></td></tr>
+                <tr><td>新会员卡号：</td><td><span id="newMcCard"></span></td></tr>
+                <tr><td>新会员卡密码：</td><td><input type="password" id="newPWD" /><span class="span"></span></td></tr>
+                <tr><td>确认密码：</td><td><input type="password" id="newPWD1" /><span class="span"></span></td></tr>
+                <tr><td></td><td><input type="button" id="btnSubmit" value="换卡" /></td></tr>
+            </table>
+        </fieldset>
+    </div>
+</body>
+</html>

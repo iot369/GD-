@@ -1,0 +1,140 @@
+﻿@model MPMS.Models.Users
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>新增用户</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //新增按钮的点击事件 添加用户
+            $("#btnInsert").click(function () {
+                var U_LoginName = $("#U_LoginName").val();
+                var U_Password = $("#U_Password").val();
+                var U_RealName = $("#U_RealName").val();
+                var U_Sex = $("#U_Sex:checked").val();//获取性别
+                var U_Telephone = $("#U_Telephone").val();
+                var U_Role = $("#U_Role").val();
+
+                var U_CanDelete = $("input[name='U_CanDelete.Value']:checked").val();//是否可以删除
+                if (!U_CanDelete) U_CanDelete = false;//未选中 赋值False
+                //验证
+                if (U_LoginName == "") {
+                    alert("登录名不能为空");
+                    return null;
+                }
+                var regLonginName = /^[^\<\>]+$/;   //正则表达式（防止脚本注入）
+                var regTel = /^0?1[3|4|5|8][0-9]\d{8}$/;
+                if (!regLonginName.test(U_LoginName)) alert("请输入有效的数据！");
+                else {
+                    if (U_Password == "") {
+                        alert("密码不能为空！");
+                        return;
+                    }
+                    else if (U_RealName == "") {
+                        alert("真实姓名不能为空！");
+                        return;
+                    } else if (U_Telephone == "") {
+                        alert("联系电话不能为空！");
+                        return;
+                    } else if (!regTel.test(U_Telephone)) {//判断是否符合表达式
+                        alert("输入的电话号码格式有误！");
+                        return;
+                    }
+                    else if (U_Role == "") {
+                        alert("角色不能为空！");
+                        return;
+                    }
+                    else {
+                        $.ajax({
+                            url: "/ManageUser/Creates",
+                            type: "post",
+                            dataType: "html",
+                            data: {
+                                ULoginName: U_LoginName,
+                                UPassword: U_Password,
+                                URealName: U_RealName,
+                                USex: U_Sex,
+                                UTelephone: U_Telephone,
+                                URole: U_Role,
+                                UCanDelete: U_CanDelete
+                            },
+                            success: function (data) {
+                                if (data == "OK") {
+                                    alert('新增成功');
+                                    window.parent.$('#dlg').dialog('close');
+                                    window.parent.$('#UserInfo').datagrid('reload');
+                                } else
+                                {
+                                    alert("用户名重复，请重新输入。")
+                                }
+                            },
+                            error: function () {
+                                alert("链接超时，请重试！！！");
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        <table style="font-size: 12px;" align="center">
+            <tr>
+                <td>登录名</td>
+                <td>
+                    @Html.EditorFor(model => model.U_LoginName)
+                </td>
+            </tr>
+            <tr>
+                <td>密码</td>
+                <td>
+                    @Html.EditorFor(model => model.U_Password)
+                </td>
+            </tr>
+            <tr>
+                <td>真实姓名</td>
+                <td>@Html.EditorFor(model => model.U_RealName)</td>
+            </tr>
+            <tr>
+                <td>性别</td>
+                <td>
+                    @Html.RadioButtonFor(model => model.U_Sex, "男", new { @checked = true })男
+                    @Html.RadioButtonFor(model => model.U_Sex, "女")女
+                </td>
+            </tr>
+            <tr>
+                <td>电话</td>
+                <td>@Html.EditorFor(model => model.U_Telephone)</td>
+            </tr>
+            <tr>
+                <td>角色</td>
+                <td>@Html.DropDownListFor(model => model.U_Role, ViewBag.category as SelectList, "-请选择-")</td>
+            </tr>
+            <tr>
+                <td>是否可以删除</td>
+                <td>@Html.CheckBoxFor(model => model.U_CanDelete.Value)</td>
+            <tr>
+                <td>
+                    <input id="btnInsert" type="button" value="新增" />
+                </td>
+            </tr>
+        </table>
+    }
+</body>
+</html>

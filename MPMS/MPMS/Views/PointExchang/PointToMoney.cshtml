@@ -1,0 +1,140 @@
+﻿ 
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>PointToMoney</title>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        function onClickCell(index, field) {
+            if (endEditing()) {
+                $('#ExchangGifts').datagrid('selectRow', index).datagrid('editCell', { index: index, field: field });
+                editIndex = index;
+            }
+        }
+
+        $.extend($.fn.datagrid.methods, {
+            editCell: function (jq, param) {
+                return jq.each(function () {
+                    var opts = $(this).datagrid('options');
+                    var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                    for (var i = 0; i < fields.length; i++) {
+                        var col = $(this).datagrid('getColumnOption', fields[i]);
+                        col.editor1 = col.editor;
+                        if (fields[i] != param.field) {
+                            col.editor = null;
+                        }
+                    }
+                    $(this).datagrid('beginEdit', param.index);
+                    for (var i = 0; i < fields.length; i++) {
+                        var col = $(this).datagrid('getColumnOption', fields[i]);
+                        col.editor = col.editor1;
+                    }
+                });
+            }
+        });
+        var editIndex = undefined;
+        function endEditing() {
+            if (editIndex == undefined) { return true }
+            if ($('#ExchangGifts').datagrid('validateRow', editIndex)) {
+                $('#ExchangGifts').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        $(function () {
+            var d = new Date();
+            $("#txtExchangDate").val(d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate());
+            $(".Search").click(function () {
+                var MC_CardID = $("#MC_CardID").val();
+                if (!(/^\d+$/).test(MC_CardID)) return alert('请输入正确格式的卡号/手机（纯数字）');
+                var d = new Date();
+                $.getJSON("/PointExchang/SearchByID", { MC_CardID: MC_CardID }, function (data) {
+                    if (data.msg) {
+                        $("#MC_Name, #CL_LevelName, #MC_Point, #MC_TotalMoney").text("");
+                        return alert(data.msg)
+                    }
+                    $("#MC_Name").text(data.MemCards.MC_Name);
+                    var leve = data.CardLevels.CL_LevelName;
+                    $("#MC_ID").val(data.MemCards.MC_ID);
+                    $("#CL_LevelName").text(leve + "（折扣比例：" + data.CardLevels.CL_Percent + "〕");
+                    $("#MC_Point").text(data.MemCards.MC_Point);
+                    $("#MC_TotalMoney").text(data.MemCards.MC_TotalMoney);
+                })
+            });
+            $('#txtExchangPoint').blur(function () {//兑换积分文本框失去焦点事件
+                var ExchangPoint = $(this).val();
+                if (ExchangPoint) {//若已输入
+                    if (!$("#MC_Name").text()) return alert('请先点击查询');
+                    if (!(/^\d+$/).test(ExchangPoint)) return alert('请输入正整数');
+                    if (parseInt(ExchangPoint) > parseInt($("#MC_Point").text())) return alert('积分不足');
+                    $('#txtExchangMoney').val(parseInt(parseInt(ExchangPoint) / 50));
+                    $('#txtResiduePoint').text(parseInt($("#MC_Point").text()) - parseInt(ExchangPoint));
+                }
+            });
+            $('#btnExchange').click(function () {
+                if (!$('#MC_Name').text()) return alert('请先点击查询');
+                if (!$('#txtResiduePoint').text()) return alert('请输入兑换积分');
+                $.ajax({
+                    url: "/PointExchang/PointToMoney/" + $("#MC_ID").val().trim(),
+                    type: 'post',
+                    data: {
+                        ExchangPoint: $('#txtExchangPoint').val(),
+                        ExchangMoney: $('#txtExchangMoney').val()
+                    },
+                    success: function (d) {
+                        alert(d);
+                        if (d.indexOf('错误') == -1) location = location;
+                    },
+                    error: function () {
+                        alert("err!");
+                    }
+                });
+            });
+        
+        })
+    </script>
+</head>
+<body>
+ @using (Html.BeginForm("Index", "PointExchang", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+ {
+        <div>
+            <fieldset>
+                <legend>查找会员</legend>
+                <input type="hidden" id="MC_ID" />
+                卡号/手机号：<input id="MC_CardID" type="text" /><a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a><br />
+                <table>
+                    <tr><td>姓名:</td><td><span id="MC_Name" style="color:red"></span></td><td>等级：</td><td><span id="CL_LevelName" style="color:royalblue"></span></td></tr>
+                    <tr><td>当前积分:</td><td><span id="MC_Point" style="color:red"></span></td><td>累计消费：</td><td>￥<span id="MC_TotalMoney" style="color:royalblue"></span></td></tr>
+                </table>
+            </fieldset>
+        </div>
+        <fieldset>
+            <legend>积分返现</legend>
+            兑换日期：<input type="text" id="txtExchangDate" disabled="disabled" /><br />
+            兑换积分：<input type="text" id="txtExchangPoint" /> &nbsp;积分返现：<input type="text" id="txtExchangMoney" /><br />
+            剩余积分：<span id="txtResiduePoint"></span>
+        </fieldset>
+        <fieldset>
+            <legend>说明</legend>
+            操作过程中，只需要输入操作的会员卡号/手机对应查询对应会员，再输入兑换积分，系统将自动计算。<br />
+            在“管理”→“其他设置”中，可设置会员积分返现的兑换比例<br />
+        </fieldset>
+            <input type="button" value="马上返现" id="btnExchange" />
+ }
+</body>
+</html>

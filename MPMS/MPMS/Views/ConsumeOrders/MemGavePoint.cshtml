@@ -1,0 +1,123 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script type="text/javascript">
+    $(function () {
+        //根据卡号或者手机号查找
+        var num = "";
+        $("#btnSearch").click(function () {
+            num = $("#nums").val();  //获取手机号/卡号
+            var cardNum = /^[0-9]{5,5}$/    //卡号 正则
+            var CellNum = /^[0-9]{5,5}$/    //手机号 正则
+            if (!cardNum.test(num) || !cardNum.test(num)) {
+                alert("必须为11位数手机号或者是5位数卡号");
+                return;
+            }
+            $.getJSON("/ConsumeOrders/GetInfoByNum", { num: num }, function (data) {
+                if (data != null) {
+                    $("#MC_Name").text(data.MemCards.MC_Name);
+                    $("#CL_LevelName").text(data.CardLevels.CL_LevelName);
+                    $("#CL_Percent").text(data.CardLevels.CL_Percent);
+                    $("#MC_Point").text(data.MemCards.MC_Point);
+                    $("#MC_TotalMoney").text(data.MemCards.MC_TotalMoney);
+                    $("#MC_ID").text(data.MemCards.MC_ID);
+                    $("#MC_CardID").text(data.MemCards.MC_CardID);
+                }
+            });
+        });
+
+        //马上扣除
+        $("#gaveNow").click(function () {
+            //会员表 ：消费积分 
+            //消费订单表：订单类型（ 减积分  3） 兑/减积分 备注 消费时间 （店铺编号 用户编号 会员编号 会员卡号 ）
+            var point = $("#MC_Point").text();  //当前积分
+            var gavePoint = $("#GavePoint").val();   //兑减积分
+            var re = /^[1-9]\d*$/;
+            if (!re.test(gavePoint)) {
+                alert("兑减积分只能是整数");
+                return;
+            }
+            var remark = $("#CO_Remark").val();   //备注
+            var time = $("#CO_CreateTime").text();  //消费时间 当前时间
+            var mcID = $("#MC_ID").text();  //会员编号
+            var mcCardID = $("#MC_CardID").text();   //会员卡号
+            $.ajax({   //修改会员信息表 减积分
+                url: "/MemCards/EditMemCardsGavePoint",
+                data: {
+                    CardID: num,
+                    MC_Point: point,
+                    GavePoint: gavePoint
+                },
+                type: "post",
+                dataType: "html",
+                success: function (data) {
+                    if (data == "OK") {
+                        
+                        $.ajax({   //添加新订单
+                            url: "/ConsumeOrders/InsertConsumeGavePoint",
+                            data: {
+                                CO_GavePoint: gavePoint,
+                                CO_CreateTime: time,
+                                MC_ID: mcID,
+                                MC_CardID: mcCardID,
+                                CO_Remark: remark
+                            },
+                            type: "post",
+                            dataType: "html",
+                            success: function (data) {
+                                if (data == "OK") {
+                                    alert("成功！！");
+                                }
+                            }, errorr: function () {
+                                alert("链接超时！");
+                            }
+                        });
+                    }
+                }, errorr: function () {
+                    alert("链接超时！");
+                }
+            });
+
+        });
+
+    });
+</script>
+
+@using (Html.BeginForm())
+{
+    <input id="MC_ID" type="hidden" />
+    <input id="MC_CardID" type="hidden" />
+    <fieldset>
+        <legend>查找会员</legend>
+        <table>
+            <tr>
+                <td>卡号/手机号：<input id="nums" type="text" /><input id="btnSearch" type="button" value="查找" /></td>
+                <td>消费时间：<label id="CO_CreateTime" hidden="hidden">@DateTime.Now.ToString("yyyy年MM月dd日 HH:mm:ss")</label></td>
+            </tr>
+            <tr>
+                <td>姓名：<span id="MC_Name"></span></td>
+                <td>等级：<span id="CL_LevelName"></span>(折扣比例:<span id="CL_Percent"></span>)</td>
+            </tr>
+            <tr>
+                <td>当前积分：<span id="MC_Point"></span></td>  
+                <td>累计消费：<span id="MC_TotalMoney"></span>￥</td>
+            </tr>
+        </table>
+    </fieldset>
+    <br />
+    <fieldset>
+        <legend>减积分信息</legend>
+        <table>
+            <tr>
+                <td>扣除积分：<input id="GavePoint" type="text" /></td>
+            </tr>
+            <tr>
+                <td>备注：<input id="CO_Remark" type="text" /></td>
+            </tr>
+        </table>
+    </fieldset>
+    <input id="gaveNow" type="button" value="马上扣除" />
+}

@@ -1,0 +1,56 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //查询按钮的点击事件（积分兑换）
+            $("#search").click(function () {
+                if (!$("#num").val()) return alert('请输入会员卡号/电话');
+                $("#ExchangLogInfo").datagrid({
+                    url: "/PointExchang/GetExchangLogInfo/" + $("#num").val(),
+                    singleSelect: true,
+                    rownumbers: true,
+                    pagination: true,
+                    checkbox: true,
+                    pageList: [1, 2, 5, 10, 20],
+                    columns: [[
+                        { field: 'EG_GiftName', title: '礼品名称', width: 100, align: 'center' },
+                        { field: 'EL_Point', title: '所用积分', width: 100, align: 'center' },
+                        { field: 'EL_Number', title: '兑换数量', width: 100, align: 'center' },
+                        {
+                            field: 'EL_CreateTime', title: '兑换时间', width: 100, align: 'center', formatter: function (value) {
+                                return FormatJsonTime(value);
+                            }
+                        }
+                    ]]
+                });
+            });
+        });
+    </script>
+    <title>ExchangLog</title>
+</head>
+<body>
+    <fieldset>
+        <legend>查找会员</legend>        
+        会员卡号/电话：<input type="text" id="num" /><input type="button" id="search" value="全部消费记录" />
+    </fieldset>
+    <fieldset>
+        <legend>兑换历史记录</legend>
+        <table id="ExchangLogInfo"></table>
+    </fieldset>
+</body>
+</html>

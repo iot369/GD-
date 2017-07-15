@@ -1,0 +1,175 @@
+﻿ 
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        function onClickCell(index, field) {
+            if (endEditing()) {
+                $('#ExchangGifts').datagrid('selectRow', index).datagrid('editCell', { index: index, field: field });
+                editIndex = index;
+            }
+        }
+
+        $.extend($.fn.datagrid.methods, {
+            editCell: function (jq, param) {
+                return jq.each(function () {
+                    var opts = $(this).datagrid('options');
+                    var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                    for (var i = 0; i < fields.length; i++) {
+                        var col = $(this).datagrid('getColumnOption', fields[i]);
+                        col.editor1 = col.editor;
+                        if (fields[i] != param.field) {
+                            col.editor = null;
+                        }
+                    }
+                    $(this).datagrid('beginEdit', param.index);
+                    for (var i = 0; i < fields.length; i++) {
+                        var col = $(this).datagrid('getColumnOption', fields[i]);
+                        col.editor = col.editor1;
+                    }
+                });
+            }
+        });
+        var editIndex = undefined;
+        function endEditing() {
+            if (editIndex == undefined) { return true }
+            if ($('#ExchangGifts').datagrid('validateRow', editIndex)) {
+                $('#ExchangGifts').datagrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        $(function () {
+            if ($("#err").val()) {
+                if ($("#err").val() == "-1") {
+                    alert('兑换成功！');
+                    parent.$('#dlg').dialog('close');
+                    parent.$('#MemCardInfo').datagrid('reload');
+                } else alert($("#err").val());//上传文件后台报错
+            }
+            $(".Search").click(function () {
+
+                var MC_CardID = $("#MC_CardID").val();
+                if (!(/^\d+$/).test(MC_CardID)) return alert('请输入正确格式的卡号/手机（纯数字）');
+                var d = new Date();
+                $("#CO_CreateTime").text(d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate());
+                $.getJSON("/PointExchang/SearchByID", { MC_CardID: MC_CardID }, function (data)
+                {
+                    if (data.msg) {
+                        $("#MC_Name, #CL_LevelName, #MC_Point, #MC_TotalMoney").text("");
+                        return alert(data.msg)
+                    }
+                    $("#MC_Name").text(data.MemCards.MC_Name);
+                    var leve = data.CardLevels.CL_LevelName;
+                    $("#MC_ID").val(data.MemCards.MC_ID);
+                    $("#CL_LevelName").text(leve + "（折扣比例：" + data.CardLevels.CL_Percent + "〕");
+
+                    $("#MC_Point").text(data.MemCards.MC_Point);
+                    $("#MC_TotalMoney").text(data.MemCards.MC_TotalMoney);
+                })
+            })
+       
+        $("#btnExchange").click(function () {
+            $('#ExchangGifts').datagrid('endEdit', editIndex);
+            var MC_Point = $("#MC_Point").text();
+            if (MC_Point == "")  return alert("请先查询会员"); 
+            var rows = $('#ExchangGifts').datagrid('getSelections');
+            var ids = [];
+
+            if (rows.length == 0) { $.messager.alert('警告', '请选择行！'); return false; }
+                                     
+            var EL_Point = 0;
+            for (var i = 0; i < rows.length; i++)
+            {                     
+                var row = rows[i];
+                                          
+                var num = parseInt(row.EL_Number) + parseInt(row.EG_ExchangNum);//总共兑换过的数量
+                if (row.EL_Number == undefined || row.EL_Number == "")
+                {
+                    $.messager.alert('警告', '请输入礼品数量！'); return false;
+                }
+                //数据验证             
+                if (num > row.EG_Number) { alert("已超过礼品数目"); return false; }
+                EL_Point = parseInt(row.EL_Number) * parseInt(row.EG_Point) + parseInt(EL_Point);
+                if (EL_Point > MC_Point) { alert("已超过剩余积分"); return false; }
+                var Exchang = {
+                    EG_ID: row.EG_ID,
+                    EG_GiftCode: row.EG_GiftCode,
+                    EG_GiftName: row.EG_GiftName,
+                    EG_Point: row.EG_Point,
+                    EL_Number: row.EL_Number,
+                    EL_Point: (row.EL_Number * row.EG_Point),
+                    EG_ExchangNum: (row.EL_Number + row.EG_ExchangNum),
+                    MC_CardID:$("#MC_CardID").val(),
+                    MC_Name: $("#MC_Name").text(),
+                    MC_ID: $("#MC_ID").text()
+                };
+                ids.push(Exchang);
+                }  
+            $("#ExchangLogs").val(JSON.stringify(ids));
+        })
+            //绑定数据 礼品兑换
+        $('#ExchangGifts').datagrid({
+            url: '/PointExchang/GetExchangGifts',
+            rownumbers: true,
+            pagination: true,
+            pageSize: 5,
+            pageList: [5, 10, 15],
+            onClickCell: onClickCell,
+            columns: [[
+                { checkbox: true, width: 100 },
+                { field: 'EG_ID', title: '礼品编号', width: 100 },
+                { field: 'EG_GiftCode', title: '礼品代号', width: 100 },
+                { field: 'EG_GiftName', title: '礼品名称', width: 100 },
+                { field: 'EG_Point', title: '所需积分', width: 100 },
+                { field: 'EG_Number', title: '礼品数量', width: 100 },
+                { field: 'EG_ExchangNum', title: '已兑换数量', width: 100 },
+                { field: 'EG_Remark', title: '备注', width: 100 },
+             { field: 'EL_Number', title: '兑换数量', width: 100, editor: 'text' },
+            ]],
+            toolbar: '#tb'
+        });
+        })
+    </script>
+</head>
+<body>
+@Html.Hidden("err", (ViewBag.err ?? "") as object)
+ @using (Html.BeginForm("Index", "PointExchang", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+ {
+        <div>
+            <fieldset>
+                <legend>查找会员</legend>
+                <input type="hidden" id="MC_ID" />                
+                卡号/手机号：<input id="MC_CardID" type="text" /><a href="#" class="easyui-linkbutton Search" iconcls="icon-search">查询</a>&nbsp;消费时间:<span id="CO_CreateTime"></span><br />
+                <table>
+                    <tr><td>姓名:</td><td><span id="MC_Name" style="color:red"></span></td><td>等级：</td><td><span id="CL_LevelName" style="color:royalblue"></span></td></tr>
+                    <tr><td>当前积分:</td><td><span id="MC_Point" style="color:red"></span></td><td>累计消费：</td><td>￥<span id="MC_TotalMoney" style="color:royalblue"></span></td></tr>
+                </table>
+            </fieldset>
+
+        </div>
+
+        <table id="ExchangGifts"></table>
+        <input type="text" id="ExchangLogs" hidden="hidden" name="ExchangLogs" />
+        <p style="color:red">双击“兑换数量”的单元格可以修改兑换数量。 </p>
+        <p style="color:red">如果还未设置礼品，请点击[<a href="/Gifts/Index">礼品管理</a>]</p>
+        <input type = "submit" value = "马上兑换" id = "btnExchange" />
+}
+</body>
+</html>

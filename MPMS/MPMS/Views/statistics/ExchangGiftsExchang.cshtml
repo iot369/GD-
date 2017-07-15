@@ -1,0 +1,66 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>ExchangGiftsExchang</title>
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.11.1.js"></script>
+    <script src="~/Scripts/jquery-easyui-min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script src="~/Scripts/SVSE.UI.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //页面加载查询所有兑换信息
+            $("#tab").datagrid({
+                url: "/Statistics/GetExchangGiftsExchangInfo",
+                singleSelect: true,
+                rownumbers: true,
+                pagination: true,
+                checkbox: true,
+                pageList: [1, 2, 5, 10, 20],
+                columns: [[
+                   { field: 'MC_CardID', title: '会员卡号', width: 100, align: 'center' },
+                   { field: 'MC_Name', title: '会员姓名', width: 100, align: 'center' },
+                   { field: 'EG_ID', title: '礼品编号', width: 100, align: 'center' },
+                   { field: 'EG_GiftName', title: '礼品名称', width: 100, align: 'center' },
+                   { field: 'EL_Point', title: '所用积分', width: 100, align: 'center' },
+                   { field: 'EL_Number', title: '兑换数量', width: 100, align: 'center' },
+                   {
+                       field: 'EL_CreateTime', title: '兑换时间', width: 100, align: 'center', formatter: function (v) {
+                           return FormatJsonTime(v);
+                       }
+                   }
+                ]]
+            });
+            //查询按钮的点击事件
+            $("#search").click(function () {
+                if ($('#txtBDate').datebox('getValue') != "" && $('#txtEDate').datebox('getValue') != "") if ($('#txtBDate').datebox('getValue') > $('#txtEDate').datebox('getValue')) return alert('起始时间必须小于终止时间');
+                $("#divTab").show();
+                $("#tab").datagrid('load', {
+                    BTime: $('#txtBDate').datebox('getValue').trim() == "" ? "" : $('#txtBDate').datebox('getValue') + " " + $("#txtBTime").val(),
+                    ETime: $('#txtEDate').datebox('getValue').trim() == "" ? "" : $('#txtEDate').datebox('getValue') + " " + $("#txtETime").val(),
+                    MC_CardID: $("#txtMC_CardID").val().trim()
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="main">
+        <fieldset>
+            <legend>查询</legend>
+            卡号/手机：<input type="text" id="txtMC_CardID" />兑换日期：<input id="txtBDate" type="text" class="easyui-datebox" required="required"></input>&nbsp;<input type="text" disabled="disabled" value="00:00:00" id="txtBTime" style="width:50px;" />至<input id="txtEDate" type="text" class="easyui-datebox" required="required"></input>&nbsp;<input type="text" disabled="disabled" value="23:59:59" id="txtETime" style="width:50px;" /><input type="button" value="查询" id="search" />
+        </fieldset>
+        <table id="tab"></table>
+    </div>
+</body>
+</html>

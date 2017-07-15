@@ -1,0 +1,119 @@
+﻿@model MPMS.Models.Users
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>EditPwd</title>
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/default/easyui.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/easyui/icon.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/jquery-1.11.1.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-easyui-min.js" type="text/javascript"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js" type="text/javascript"></script>
+    <script src="~/Scripts/ToolKit.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //修改按钮的点击事件
+            $("#btnUpdate").click(function () {
+                //获取用户数据
+                var uId = $("#U_ID").val();//获取ID
+                var uPassword = $("#UPassword").val();   //用户输入旧密码
+                var oldPwd = $("#U_Password").val();    //隐藏域中保存的原密码
+                var newPwd1 = $("#newPwd1").val();
+                var newPwd2 = $("#newPwd2").val();
+                //数据验证
+                if (newPwd1 == "" || newPwd2 == "" || uPassword=="") {
+                    $.messager.alert('验证警示', '密码不能为空！', 'warning');
+                    return false;
+                }
+                if (uPassword != oldPwd)
+                {
+                    $.messager.alert('验证警示', '旧密码输入错误！！', 'warning');
+                    return false;
+                }
+                if(newPwd1!=newPwd2)
+                {
+                    $.messager.alert('验证警示', '两次密码输入不一致！', 'warning');
+                    return false;
+                }
+                if (newPwd2 == oldPwd)
+                {
+                    $.messager.alert('验证警示', '新密码不能与旧密码相同！', 'warning');
+                    return false;
+                }
+                //跳转修改密码控制器
+                $.ajax({
+                    url: "/User/EditUserPWD",
+                    type: "post",
+                    dataType: "html",
+                    data: {
+                        U_ID: uId,
+                        U_newPwd2: newPwd2,
+
+                    }, success: function (data) {
+                        if (data == "OK") {
+                            alert("修改成功！");
+                            window.parent.$("#dlg").dialog("close");
+                            window.parent.$("#ShopInfo").datagrid("reload");
+                        }
+                    }, error: function () {
+                        $.messager.alert('错误提示', '链接超时，请重新尝试！', 'error');
+                    }
+                })
+            });
+        });
+    </script>
+</head>
+<body>
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            @Html.HiddenFor(model => model.U_ID)
+            @Html.HiddenFor(model => model.U_Password)
+
+            <table style="font-size: 12px;" align="center">
+                <tr>
+                    <td>
+                        旧密码：
+                    </td>
+                    <td>
+                        @*@Html.EditorFor(model => model.U_Password)*@
+                        <input id="UPassword" type="text" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        新密码：
+                    </td>
+                    <td>
+                        <input id="newPwd1" type="text" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        确认密码：
+                    </td>
+                    <td>
+                        <input id="newPwd2" type="text" />
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input id="btnUpdate" type="button" value="修改" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    }
+</body>
+</html>
